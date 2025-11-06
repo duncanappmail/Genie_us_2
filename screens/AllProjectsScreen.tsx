@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Project } from '../types';
 import { AssetPreview } from '../components/AssetPreview';
-import { CameraIcon, FilmIcon, MagnifyingGlassIcon, SparklesIcon, TrashIcon, LeftArrowIcon } from '../components/icons';
+import { ImageIcon, VideoIcon, MagnifyingGlassIcon, SparklesIcon, TrashIcon, LeftArrowIcon } from '../components/icons';
 import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
 
@@ -9,8 +9,13 @@ export const AllProjectsScreen: React.FC = () => {
     const { projects, setCurrentProject, setProjectToDelete } = useProjects();
     const { navigateTo, goBack } = useUI();
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeFilter, setActiveFilter] = useState<'All' | 'Images' | 'Videos'>('All');
     
-    const filteredProjects = projects.filter(p => 
+    const filteredProjects = projects.filter(p => {
+        if (activeFilter === 'Images') return p.generatedImages.length > 0;
+        if (activeFilter === 'Videos') return p.generatedVideos.length > 0;
+        return true;
+    }).filter(p => 
         (p.prompt || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.productName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.mode.toLowerCase().includes(searchQuery.toLowerCase())
@@ -31,9 +36,41 @@ export const AllProjectsScreen: React.FC = () => {
                 <LeftArrowIcon className="w-4 h-4"/> Back to Dashboard
             </button>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 sm:gap-0">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
                 <h2 className="text-3xl font-bold text-center sm:text-left">Your Projects</h2>
                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                        <button
+                            onClick={() => setActiveFilter('All')}
+                            className={`px-4 sm:px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                                activeFilter === 'All'
+                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
+                            }`}
+                        >
+                            All
+                        </button>
+                        <button
+                            onClick={() => setActiveFilter('Images')}
+                            className={`flex items-center gap-2 px-4 sm:px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                                activeFilter === 'Images'
+                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
+                            }`}
+                        >
+                            <ImageIcon className="w-5 h-5" /> Images
+                        </button>
+                        <button
+                            onClick={() => setActiveFilter('Videos')}
+                            className={`flex items-center gap-2 px-4 sm:px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                                activeFilter === 'Videos'
+                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
+                            }`}
+                        >
+                            <VideoIcon className="w-5 h-5" /> Videos
+                        </button>
+                    </div>
                     <div className="relative flex-grow sm:flex-grow-0">
                         <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"/>
                         <input 
@@ -60,8 +97,8 @@ export const AllProjectsScreen: React.FC = () => {
                                 <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative overflow-hidden">
                                     {previewAsset ? <AssetPreview asset={previewAsset} objectFit="cover" hoverEffect={true} /> : <SparklesIcon className="w-12 h-12 text-gray-400" />}
                                     <div className="absolute bottom-2 right-2 flex items-center gap-2">
-                                        {p.generatedImages.length > 0 && <div className="flex items-center gap-1 text-xs text-white bg-black/50 px-1.5 py-0.5 rounded-full"><CameraIcon className="w-3 h-3"/>{p.generatedImages.length}</div>}
-                                        {p.generatedVideos.length > 0 && <div className="flex items-center gap-1 text-xs text-white bg-black/50 px-1.5 py-0.5 rounded-full"><FilmIcon className="w-3 h-3"/>{p.generatedVideos.length}</div>}
+                                        {p.generatedImages.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><ImageIcon className="w-5 h-5"/>{p.generatedImages.length}</div>}
+                                        {p.generatedVideos.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><VideoIcon className="w-5 h-5"/>{p.generatedVideos.length}</div>}
                                     </div>
                                 </div>
                                 <div className="p-3 flex flex-col flex-grow">

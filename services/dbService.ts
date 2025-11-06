@@ -1,10 +1,10 @@
-
-import type { Project, UploadedFile } from '../types';
+import type { Project, UploadedFile, BrandProfile } from '../types';
 
 const DB_NAME = 'GenieUsDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Increment version for schema change
 const PROJECTS_STORE_NAME = 'projects';
 const FILES_STORE_NAME = 'files';
+const BRAND_PROFILES_STORE_NAME = 'brandProfiles';
 
 const getDB = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
@@ -21,6 +21,9 @@ const getDB = (): Promise<IDBDatabase> => {
             }
             if (!db.objectStoreNames.contains(FILES_STORE_NAME)) {
                 db.createObjectStore(FILES_STORE_NAME, { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains(BRAND_PROFILES_STORE_NAME)) {
+                db.createObjectStore(BRAND_PROFILES_STORE_NAME, { keyPath: 'userId' });
             }
         };
     });
@@ -147,4 +150,68 @@ export const deleteProject = async (projectId: string): Promise<void> => {
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
     });
+};
+
+// --- Brand Profile Functions ---
+
+export const saveBrandProfile = async (profile: BrandProfile): Promise<void> => {
+    const db = await getDB();
+    const tx = db.transaction([BRAND_PROFILES_STORE_NAME, FILES_STORE_NAME], 'readwrite');
+    const profilesStore = tx.objectStore(BRAND_PROFILES_STORE_NAME);
+    const filesStore = tx.objectStore(FILES_STORE_NAME);
+    
+    const { logoFile, ...leanProfile } = profile;
+    
+    if (logoFile && logoFile.blob) {
+        await promisifyRequest(filesStore.put({ id: logoFile.id, blob: logoFile.blob }));
+    }
+    
+    const profileToStore = {
+        ...leanProfile,
+        logoFile: logoFile ? { id: logoFile.id, mimeType: logoFile.mimeType, name: logoFile.name } : null
+    };
+
+    await promisifyRequest(profilesStore.put(profileToStore));
+};
+
+export const getBrandProfile = async (userId: string): Promise<BrandProfile | null> => {
+    const db = await getDB();
+    const tx = db.transaction([BRAND_PROFILES_STORE_NAME, FILES_STORE_NAME], 'readonly');
+    const profilesStore = tx.objectStore(BRAND_PROFILES_STORE_NAME);
+    const filesStore = tx.objectStore(FILES_STORE_NAME);
+
+    const leanProfile = await promisifyRequest<any>(profilesStore.get(userId));
+    if (!leanProfile) return null;
+
+    if (leanProfile.logoFile) {
+        try {
+            const fileRecord = await promisifyRequest<{ id: string, blob: Blob }>(filesStore.get(leanProfile.logoFile.id));
+            if (fileRecord) {
+                leanProfile.logoFile.blob = fileRecord.blob;
+            }
+        } catch (e) {
+            console.error(`Failed to rehydrate logo file ${leanProfile.logoFile.id}`, e);
+        }
+    }
+    
+    return leanProfile as BrandProfile;
+};
+
+export const deleteBrandProfile = async (userId: string): Promise<void> => {
+    const db = await getDB();
+    const tx = db.transaction([BRAND_PROFILES_STORE_NAME, FILES_STORE_NAME], 'readwrite');
+    const profilesStore = tx.objectStore(BRAND_PROFILES_STORE_NAME);
+    const filesStore = tx.objectStore(FILES_STORE_NAME);
+
+    const leanProfile = await promisifyRequest<any>(profilesStore.get(userId));
+
+    if (leanProfile && leanProfile.logoFile) {
+        try {
+            await promisifyRequest(filesStore.delete(leanProfile.logoFile.id));
+        } catch (e) {
+            console.error(`Failed to delete logo file ${leanProfile.logoFile.id}`, e);
+        }
+    }
+    
+    await promisifyRequest(profilesStore.delete(userId));
 };

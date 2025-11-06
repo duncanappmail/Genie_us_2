@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import type { Project, UploadedFile } from '../types';
 import { Uploader } from './Uploader';
@@ -60,7 +61,7 @@ export const AdvancedVideoSettings: React.FC<AdvancedVideoSettingsProps> = ({ pr
                         <div>
                             <label className="font-semibold block mb-2">Starting Image</label>
                             {project.startFrame ? (
-                                <div className="relative w-full">
+                                <div className="relative w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                                     <AssetPreview asset={project.startFrame} />
                                     <button onClick={() => updateProject({ startFrame: undefined })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
                                         <XMarkIcon className="w-5 h-5" />
@@ -71,7 +72,7 @@ export const AdvancedVideoSettings: React.FC<AdvancedVideoSettingsProps> = ({ pr
                          <div>
                             <label className="font-semibold block mb-2">Ending Image</label>
                              {project.endFrame ? (
-                                <div className="relative w-full">
+                                <div className="relative w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                                     <AssetPreview asset={project.endFrame} />
                                     <button onClick={() => updateProject({ endFrame: undefined })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
                                         <XMarkIcon className="w-5 h-5" />

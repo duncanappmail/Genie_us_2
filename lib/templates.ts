@@ -9,6 +9,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     previewImageUrl: 'https://images.unsplash.com/photo-1620916566398-39f1686d707d?q=80&w=1974&auto=format&fit=crop',
     promptTemplate: 'A professional studio product shot of {{PRODUCT_NAME}} on a solid, light grey seamless background. Use clean, soft lighting to highlight the product\'s details. The style should be minimalist and elegant, perfect for an e-commerce website. The overall mood is {{BRAND_VIBE}}.',
     imageGenerationPrompt: 'Professional product photography of a sleek, modern water bottle made of matte black stainless steel. The bottle is centered on a seamless, solid, light grey background (#f0f0f0). The scene is lit with clean, soft studio lighting that creates gentle highlights and minimizes shadows, emphasizing the bottle\'s form and texture. Style: minimalist, elegant, commercial. Shot on a DSLR with a prime lens.',
+    type: 'image',
   },
   {
     id: 'studio-02',
@@ -18,6 +19,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     previewImageUrl: 'https://images.unsplash.com/photo-1617814086920-0380f76784a9?q=80&w=1974&auto=format&fit=crop',
     promptTemplate: 'A high-fashion product shot of {{PRODUCT_NAME}} displayed on a set of overlapping pastel-colored geometric pedestals and blocks. The lighting should be bright and direct, creating sharp shadows. The background is a solid, complementary color. The feel is modern, artistic, and {{BRAND_VIBE}}.',
     imageGenerationPrompt: 'A stylish advertisement for a luxury watch. The watch is displayed on a mint green geometric pedestal. The scene includes other geometric shapes in pastel pink and cream. The background is a solid soft beige. The lighting is bright and direct, creating crisp, defined shadows. The style is modern, minimalist, and high-fashion. 4k, photorealistic.',
+    type: 'image',
   },
   {
     id: 'lifestyle-01',
@@ -27,6 +29,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     previewImageUrl: 'https://images.unsplash.com/photo-1589739900223-45c13b2c286e?q=80&w=1974&auto=format&fit=crop',
     promptTemplate: 'A lifestyle photograph of {{PRODUCT_NAME}} on a wooden coffee table next to a steaming mug of coffee and an open book. Soft morning light streams in through a nearby window, creating a warm and inviting atmosphere. The scene should feel relatable and cozy, targeting {{TARGET_AUDIENCE}}.',
     imageGenerationPrompt: 'A cozy lifestyle scene featuring a pair of high-end, noise-cancelling headphones resting on a rustic wooden coffee table. Next to the headphones are a steaming ceramic mug of coffee and an open book with glasses. Soft, warm morning light streams through a window, illuminating the scene. The atmosphere is peaceful, comfortable, and inviting. Photorealistic, depth of field.',
+    type: 'image',
   },
   {
     id: 'lifestyle-02',
@@ -36,6 +39,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     previewImageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb68c6a62?q=80&w=1974&auto=format&fit=crop',
     promptTemplate: 'Action shot of {{PRODUCT_NAME}} being used by a person in a bustling, stylish urban environment. The background is slightly blurred to emphasize the product. The overall image should feel energetic, modern, and aspirational, resonating with a {{TARGET_AUDIENCE}} lifestyle.',
     imageGenerationPrompt: 'A dynamic lifestyle shot of a stylish backpack in a modern urban setting. The backpack is worn by a person walking through a bustling city street, with blurred background motion of people and city lights. The image feels energetic, fashionable, and aspirational. The focus is sharp on the backpack, highlighting its textures and details. Cinematic, photorealistic.',
+    type: 'image',
   },
   {
     id: 'seasonal-01',
@@ -46,6 +50,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     promptTemplate: 'A vibrant spring scene featuring {{PRODUCT_NAME}} surrounded by fresh cherry blossoms and tulips. The lighting is bright and airy, with a soft-focus background of a green garden. The mood is refreshing, clean, and optimistic, perfect for a {{BRAND_VIBE}} spring campaign.',
     imageGenerationPrompt: 'A bottle of perfume sitting on a white marble surface, surrounded by fresh, dewy cherry blossoms and pink tulips. The background is a soft-focus garden with lush greenery. The lighting is bright and airy, evoking a fresh spring morning. Style: elegant, clean, refreshing. Photorealistic, macro details.',
     activeMonths: [2, 3, 4], // March, April, May
+    type: 'image',
   },
   {
     id: 'seasonal-02',
@@ -56,6 +61,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     promptTemplate: 'A vibrant, sun-drenched photo of {{PRODUCT_NAME}} on a clean, sandy beach. The background features turquoise ocean waves and a clear blue sky. The product is the hero, looking crisp and refreshing. The feel is energetic, fun, and perfectly captures the {{BRAND_VIBE}} of summer.',
     imageGenerationPrompt: 'A can of sparkling soda, dripping with condensation, sits partially buried in clean, white sand on a tropical beach. In the background, turquoise waves gently lap the shore under a bright, clear blue sky. The sun is high, casting a sharp, clean light. Style: vibrant, commercial, refreshing. Photorealistic, 8k.',
     activeMonths: [5, 6, 7], // June, July, August
+    type: 'image',
   },
   {
     id: 'seasonal-03',
@@ -66,6 +72,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     promptTemplate: 'A festive, {{BRAND_VIBE}} flat-lay of {{PRODUCT_NAME}} surrounded by mini pumpkins, colorful autumn leaves, and a cozy knit sweater. The color palette should be warm, with oranges, reds, and browns. The lighting is soft and golden, like a crisp autumn afternoon.',
     imageGenerationPrompt: 'A beautiful autumn-themed flat-lay featuring a bottle of premium skincare serum. The bottle is centrally placed and surrounded by mini pumpkins, vibrant red and orange autumn leaves, a cinnamon stick, and a corner of a cozy, chunky-knit sweater. The background is dark wood. The lighting is soft and golden, creating a warm, festive mood. Top-down view, sharp focus, rich textures.',
     activeMonths: [8, 9, 10], // September, October, November
+    type: 'image',
   },
   {
     id: 'seasonal-04',
@@ -76,6 +83,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     promptTemplate: 'A magical shot of {{PRODUCT_NAME}} resting on a bed of fresh, sparkling snow, with out-of-focus fairy lights in the background. A single, delicate snowflake is captured landing nearby. The mood is enchanting, festive, and perfect for a holiday gift guide targeting {{TARGET_AUDIENCE}}.',
     imageGenerationPrompt: 'An enchanting product shot of a luxury candle in a glass jar, resting on a bed of pristine, sparkling snow. The background is a soft-focus view of a winter forest at dusk with warm, glowing fairy lights (bokeh effect). A single, perfect snowflake is captured in mid-air near the candle. The mood is magical, festive, and serene. Cinematic, high detail.',
     activeMonths: [11, 0, 1], // December, January, February
+    type: 'image',
   },
   {
     id: 'upcoming-01',
@@ -86,6 +94,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     promptTemplate: 'An elegant, romantic scene for {{PRODUCT_NAME}}. The product is artfully placed among red rose petals and silk fabric. The lighting is soft and warm, with a few candles creating a gentle glow in the background. The mood is luxurious and perfect for a Valentine\'s Day gift.',
     imageGenerationPrompt: 'A bottle of expensive perfume is elegantly placed on a draped, deep red silk fabric, surrounded by fresh rose petals. In the background, soft-focus candles provide a warm, intimate glow. The scene is luxurious, romantic, and sophisticated. Photorealistic, shallow depth of field.',
     activeMonths: [1], // February
+    type: 'image',
   },
    {
     id: 'upcoming-02',
@@ -96,6 +105,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     promptTemplate: 'A beautiful and elegant flat-lay for {{PRODUCT_NAME}}, perfect for Mother\'s Day. The product is surrounded by a bouquet of fresh peonies and a handwritten card. The background is clean white marble. The lighting is bright and natural, creating a feeling of appreciation and love.',
     imageGenerationPrompt: 'An elegant Mother\'s Day flat-lay. A beautifully packaged box of chocolates is placed on a white marble surface, surrounded by a bouquet of fresh pink peonies and a handwritten card that says "Thank You". The lighting is bright, soft, and natural. The style is clean, sophisticated, and heartfelt.',
     activeMonths: [4], // May
+    type: 'image',
   },
   {
     id: 'upcoming-03',
@@ -106,6 +116,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     promptTemplate: 'A moody and atmospheric Halloween shot of {{PRODUCT_NAME}}. The product sits on a dark wooden surface, surrounded by theatrical smoke, small black bats, and a hint of spiderwebs. The lighting is dramatic and orange, perhaps from a nearby jack-o\'-lantern. The mood is spooky, fun, and {{BRAND_VIBE}}.',
     imageGenerationPrompt: 'A pair of black leather boots on a dark, rustic wooden table. The scene is filled with theatrical fog, and a few small, decorative bats are in the background. A carved jack-o\'-lantern off-camera casts a dramatic, orange light on the boots. The mood is spooky, atmospheric, and stylish. Cinematic lighting, halloween theme.',
     activeMonths: [9], // October
+    type: 'image',
   },
   {
     id: 'upcoming-04',
@@ -116,6 +127,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     promptTemplate: 'A festive holiday photograph of {{PRODUCT_NAME}} nestled among pine branches, red berries, and shiny ornaments. Twinkling holiday lights are softly blurred in the background. The scene is warm, joyful, and captures the magic of the holiday season, making it a perfect gift.',
     imageGenerationPrompt: 'A high-end leather wallet is nestled amongst fresh pine branches, clusters of red berries, and gold and silver christmas ornaments. In the background, warm twinkling holiday lights are beautifully blurred (bokeh). The overall mood is festive, warm, and luxurious. The perfect holiday gift. Photorealistic, tack sharp focus on the wallet.',
     activeMonths: [10, 11], // November, December
+    type: 'image',
   },
   {
     id: 'surreal-01',
@@ -125,6 +137,7 @@ export const TEMPLATE_LIBRARY: Template[] = [
     previewImageUrl: 'https://images.unsplash.com/photo-1617324888283-363a50d01a35?q=80&w=1964&auto=format&fit=crop',
     promptTemplate: 'A surreal, artistic image where {{PRODUCT_NAME}} is floating gracefully in the center of a room with clouds drifting by. The lighting is ethereal and dreamlike. The color palette is soft and pastel. This is a high-concept ad that feels {{BRAND_VIBE}} and artistic.',
     imageGenerationPrompt: 'A surreal and artistic advertisement where a pair of elegant, high-tech sneakers are floating weightlessly in the center of a minimalist room. Fluffy white clouds drift slowly through the room. The walls are a soft pastel blue. The lighting is ethereal and dreamlike, casting soft shadows. The overall mood is serene, imaginative, and high-concept. Photorealistic, 8k.',
+    type: 'image',
   },
   {
     id: 'surreal-02',
@@ -134,5 +147,6 @@ export const TEMPLATE_LIBRARY: Template[] = [
     previewImageUrl: 'https://images.unsplash.com/photo-1560155255-9d663a0a3a7c?q=80&w=1974&auto=format&fit=crop',
     promptTemplate: 'An advertisement showcasing {{PRODUCT_NAME}} as if it is growing organically from a mossy patch of forest floor. Beautiful, bioluminescent flowers are intertwined with the product. The scene is at twilight, with magical lighting. Key selling points to hint at are: {{KEY_SELLING_POINTS}}.',
     imageGenerationPrompt: 'An organic, surreal product shot. A bottle of natural face oil appears to be growing from a patch of lush, green moss on a forest floor. Small, glowing, bioluminescent mushrooms and delicate flowers are intertwined around the base of the bottle. The scene is set at twilight, with magical, soft light filtering through the trees. The mood is enchanting and highlights the product\'s natural ingredients. Macro photography, fantasy style.',
+    type: 'image',
   },
 ];

@@ -230,3 +230,20 @@ export const VideoIcon: React.FC<IconProps> = (props) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
     </svg>
 );
+
+export const SwatchIcon: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402a3.75 3.75 0 00-.615-5.883 3.75 3.75 0 00-5.883-.615L3.402 14.6a3.75 3.75 0 000 5.304zm4.242-9.192L10.5 8.25 4.5 14.25l1.84 1.84z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 4.5l-4.5 4.5" />
+    </svg>
+);
+
+export const DNAIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 4.5c.75 2.25 1.5 5.25 1.5 6.75s-.75 4.5-1.5 6.75" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 4.5c-.75 2.25-1.5 5.25-1.5 6.75s.75 4.5 1.5 6.75" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5h7.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 12h7.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 16.5h7.5" />
+  </svg>
+);

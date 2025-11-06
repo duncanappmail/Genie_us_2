@@ -3,12 +3,13 @@ import { useProjects } from '../context/ProjectContext';
 import { useUI } from '../context/UIContext';
 import { TEMPLATE_LIBRARY } from '../lib/templates';
 import type { Template, TemplateCategory } from '../types';
-import { DocumentTextIcon } from '../components/icons';
+import { DocumentTextIcon, VideoIcon, ImageIcon, SparklesIcon } from '../components/icons';
 import { PromptDisplayModal } from '../components/PromptDisplayModal';
 
 export const ExploreScreen: React.FC = () => {
     const { selectTemplate } = useProjects();
     const { setError } = useUI();
+    const [activeTemplateType, setActiveTemplateType] = useState<'image' | 'video'>('image');
     const [activeCategory, setActiveCategory] = useState<TemplateCategory>('All');
     const [promptToShow, setPromptToShow] = useState<string | null>(null);
 
@@ -33,9 +34,11 @@ export const ExploreScreen: React.FC = () => {
     const getSortValue = (month: number, currentMonth: number) => (month - currentMonth + 12) % 12;
 
     const filteredTemplates = (() => {
+        const baseTemplates = TEMPLATE_LIBRARY.filter(t => t.type === activeTemplateType);
+
         if (activeCategory === 'All') {
             // Filter out any holiday/event or seasonal templates that are not currently relevant.
-            const relevantTemplates = TEMPLATE_LIBRARY.filter(t => {
+            const relevantTemplates = baseTemplates.filter(t => {
                 if (t.category === 'Holidays & Events') {
                     return isHolidayOrEventActive(t);
                 }
@@ -81,11 +84,11 @@ export const ExploreScreen: React.FC = () => {
         }
 
         if (activeCategory === 'Seasonal') {
-            return TEMPLATE_LIBRARY.filter(t => t.category === 'Seasonal' && t.activeMonths?.includes(currentMonth));
+            return baseTemplates.filter(t => t.category === 'Seasonal' && t.activeMonths?.includes(currentMonth));
         }
 
         if (activeCategory === 'Holidays & Events') {
-             return TEMPLATE_LIBRARY
+             return baseTemplates
              .filter(t => t.category === 'Holidays & Events' && isHolidayOrEventActive(t))
              .sort((a, b) => {
                 // Ensure activeMonths exists before accessing it
@@ -98,7 +101,7 @@ export const ExploreScreen: React.FC = () => {
             });
         }
 
-        return TEMPLATE_LIBRARY.filter(t => t.category === activeCategory);
+        return baseTemplates.filter(t => t.category === activeCategory);
     })();
     
     const handleSelectTemplate = (template: Template) => {
@@ -115,16 +118,36 @@ export const ExploreScreen: React.FC = () => {
                 </p>
             </div>
 
-            <div className="mb-8">
-                <div className="flex sm:justify-center flex-nowrap sm:flex-wrap overflow-x-auto gap-2 bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
+            <div className="mb-8 space-y-6">
+                <div className="flex justify-center">
+                    <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                        <button
+                            onClick={() => setActiveTemplateType('image')}
+                            className={`flex items-center gap-2 px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                                activeTemplateType === 'image' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
+                            }`}
+                        >
+                            <ImageIcon className="w-5 h-5" /> Image
+                        </button>
+                        <button
+                            onClick={() => setActiveTemplateType('video')}
+                            className={`flex items-center gap-2 px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                                activeTemplateType === 'video' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
+                            }`}
+                        >
+                           <VideoIcon className="w-5 h-5" /> Video
+                        </button>
+                    </div>
+                </div>
+                <div className="flex justify-center overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700">
                     {categories.map(category => (
                         <button
                             key={category}
                             onClick={() => setActiveCategory(category)}
-                            className={`whitespace-nowrap px-3 sm:px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
+                            className={`whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                                 activeCategory === category
-                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm'
-                                    : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-gray-500 hover:text-blue-600 dark:hover:text-blue-400'
                             }`}
                         >
                             {category}
@@ -133,47 +156,54 @@ export const ExploreScreen: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredTemplates.map(template => (
-                    <div key={template.id} className="group relative overflow-hidden rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-                        <div className="absolute top-3 left-3 z-10 bg-black/50 text-white text-xs font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
-                            {template.category}
+            {filteredTemplates.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredTemplates.map(template => (
+                        <div key={template.id} className="group relative overflow-hidden rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                            <div className="absolute top-3 left-3 z-10 bg-black/50 text-white text-xs font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
+                                {template.category}
+                            </div>
+                            <img 
+                                src={template.previewImageUrl} 
+                                alt={template.title}
+                                className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPromptToShow(template.imageGenerationPrompt);
+                                }}
+                                className="absolute top-3 right-3 p-2 bg-black/40 rounded-full text-white hover:bg-black/60 transition-colors z-10 opacity-0 group-hover:opacity-100"
+                                aria-label="Show image generation prompt"
+                            >
+                                <DocumentTextIcon className="w-5 h-5" />
+                            </button>
+                            <div className="absolute bottom-0 left-0 p-4 w-full">
+                                 <h3 className="text-white font-bold text-lg">{template.title}</h3>
+                                 <p className="text-gray-200 text-sm mt-1 h-10 overflow-hidden">{template.description}</p>
+                                 <button
+                                    onClick={() => handleSelectTemplate(template)}
+                                    className="mt-3 w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+                                 >
+                                    Use Template
+                                 </button>
+                            </div>
                         </div>
-                        <img 
-                            src={template.previewImageUrl} 
-                            alt={template.title}
-                            className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setPromptToShow(template.imageGenerationPrompt);
-                            }}
-                            className="absolute top-3 right-3 p-2 bg-black/40 rounded-full text-white hover:bg-black/60 transition-colors z-10 opacity-0 group-hover:opacity-100"
-                            aria-label="Show image generation prompt"
-                        >
-                            <DocumentTextIcon className="w-5 h-5" />
-                        </button>
-                        <div className="absolute bottom-0 left-0 p-4 w-full">
-                             <h3 className="text-white font-bold text-lg">{template.title}</h3>
-                             <p className="text-gray-200 text-sm mt-1 h-10 overflow-hidden">{template.description}</p>
-                             <button
-                                onClick={() => handleSelectTemplate(template)}
-                                className="mt-3 w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
-                             >
-                                Use Template
-                             </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-            {filteredTemplates.length === 0 && (activeCategory === 'Seasonal' || activeCategory === 'Holidays & Events') && (
-                 <div className="text-center py-16 px-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl col-span-full">
-                    <h3 className="text-xl font-semibold text-gray-500 dark:text-gray-400">No templates for this month</h3>
-                    <p className="mt-2 text-gray-500">Check back soon or explore other categories!</p>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-16 px-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl col-span-full">
+                    <SparklesIcon className="w-12 h-12 mx-auto text-gray-400" />
+                    <h3 className="mt-4 text-xl font-semibold text-gray-500 dark:text-gray-400">
+                        {activeTemplateType === 'video' ? 'Video Templates Coming Soon!' : 'No templates found'}
+                    </h3>
+                    <p className="mt-2 text-gray-500">
+                         {activeTemplateType === 'video' ? 'Our genies are hard at work crafting magical video templates. Check back soon!' : 'Check back soon or explore other categories!'}
+                    </p>
                 </div>
             )}
+            
             <PromptDisplayModal 
                 isOpen={!!promptToShow}
                 onClose={() => setPromptToShow(null)}

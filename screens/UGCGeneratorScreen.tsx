@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CREDIT_COSTS } from '../App';
-import { SparklesIcon, UGCImage, UGCAction, UGCAudioText, UGCBackground, XMarkIcon, AspectRatioSquareIcon, AspectRatioTallIcon, AspectRatioWideIcon } from '../components/icons';
+import { SparklesIcon, UGCImage, UGCAction, UGCAudioText, UGCBackground, XMarkIcon, AspectRatioSquareIcon, AspectRatioTallIcon, AspectRatioWideIcon, TshirtIcon } from '../components/icons';
 import type { Project, UploadedFile } from '../types';
 import { Uploader } from '../components/Uploader';
 import { AssetPreview } from '../components/AssetPreview';
@@ -8,15 +8,9 @@ import { GenericSelect } from '../components/GenericSelect';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
+import { AvatarTemplateModal } from '../components/AvatarTemplateModal';
 
-type UGCStep = 'Image' | 'Action' | 'Dialogue' | 'Scene';
-
-const TEMPLATE_CHARACTERS = [
-    { name: 'Chloe', url: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1974&auto=format&fit=crop' },
-    { name: 'Marcus', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop' },
-    { name: 'Isabella', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1961&auto=format&fit=crop' },
-    { name: 'Liam', url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1974&auto=format&fit=crop' },
-];
+type UGCStep = 'Product' | 'Action' | 'Dialogue' | 'Scene' | 'Avatar';
 
 const SCENE_TEMPLATES: Record<string, string> = {
     'Modern Kitchen': 'A close-up, eye-level shot in a bright, modern kitchen. The background features clean white marble countertops, stainless steel appliances, and soft, natural light coming from a large window, creating a fresh and professional look.',
@@ -27,6 +21,13 @@ const SCENE_TEMPLATES: Record<string, string> = {
     'City Park': 'A medium shot in a beautiful city park on a sunny day. The background has green grass, lush trees, and a pathway with soft, out-of-focus details. The scene is bright and lively, conveying energy and positivity.',
     'Beach': 'A medium shot on a beautiful sandy beach with calm blue waves and a clear sky in the background. The sun is bright, creating a relaxed, happy, and aspirational atmosphere perfect for a vacation or lifestyle theme.'
 };
+
+const AVATAR_DESCRIPTIONS = [
+    { title: "Young & Trendy", description: "Gen Z, relatable, social media savvy style." },
+    { title: "Professional & Trustworthy", description: "Millennial, clear communicator, expert-like." },
+    { title: "Warm & Authentic", description: "Gen X, friendly, mom/dad-vlogger style." },
+    { title: "Energetic & Fun", description: "Young adult, enthusiastic, gamer/streamer vibe." },
+];
 
 
 const fileToUploadedFile = async (file: File | Blob, name: string): Promise<UploadedFile> => {
@@ -56,7 +57,9 @@ export const UGCGeneratorScreen: React.FC = () => {
         handleGenerate,
     } = useProjects();
     
-    const [currentStep, setCurrentStep] = useState<UGCStep>('Image');
+    const [currentStep, setCurrentStep] = useState<UGCStep>('Product');
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+
 
     if (!project || !user) {
         return <div className="text-center p-8">Error: No active project.</div>;
@@ -72,19 +75,22 @@ export const UGCGeneratorScreen: React.FC = () => {
         const response = await fetch(character.url);
         const blob = await response.blob();
         const file = await fileToUploadedFile(blob, `${character.name}.jpg`);
-        updateProject({ ugcAvatarFile: file });
+        // Clear description when image template is chosen
+        updateProject({ ugcAvatarFile: file, ugcAvatarDescription: '' });
+        setIsAvatarModalOpen(false);
     };
     
     const cost = CREDIT_COSTS.ugcVideo;
 
     const steps: { name: UGCStep, icon: React.ReactNode }[] = [
-        { name: 'Image', icon: <UGCImage className="w-5 h-5" /> },
+        { name: 'Product', icon: <TshirtIcon className="w-5 h-5" /> },
         { name: 'Action', icon: <UGCAction className="w-5 h-5" /> },
         { name: 'Dialogue', icon: <UGCAudioText className="w-5 h-5" /> },
         { name: 'Scene', icon: <UGCBackground className="w-5 h-5" /> },
+        { name: 'Avatar', icon: <UGCImage className="w-5 h-5" /> },
     ];
     
-    const stepOrder: UGCStep[] = ['Image', 'Action', 'Dialogue', 'Scene'];
+    const stepOrder: UGCStep[] = ['Product', 'Action', 'Dialogue', 'Scene', 'Avatar'];
     const isLastStep = currentStep === stepOrder[stepOrder.length - 1];
 
     const handleNext = () => {
@@ -103,10 +109,11 @@ export const UGCGeneratorScreen: React.FC = () => {
 
     const renderCurrentStep = () => {
         switch(currentStep) {
-            case 'Image': return <ImageStep project={project} updateProject={updateProject} onSelectTemplate={handleSelectTemplateCharacter} />;
+            case 'Product': return <ProductStep project={project} updateProject={updateProject} />;
             case 'Action': return <ActionStep project={project} updateProject={updateProject} />;
             case 'Dialogue': return <DialogueStep project={project} updateProject={updateProject} />;
             case 'Scene': return <SceneStep project={project} updateProject={updateProject} />;
+            case 'Avatar': return <AvatarStep project={project} updateProject={updateProject} onOpenTemplateModal={() => setIsAvatarModalOpen(true)} />;
             default: return null;
         }
     };
@@ -151,99 +158,94 @@ export const UGCGeneratorScreen: React.FC = () => {
 
                     {/* Right Content */}
                     <div className="md:col-span-3">
-                        <div className="min-h-[60vh]">
+                        <div className="md:min-h-[60vh]">
                           {renderCurrentStep()}
                         </div>
                     </div>
                 </div>
             </div>
             
-            {/* Settings & Actions Below Box */}
             <div className="mt-8">
-                {isLastStep && (
-                    <div className="mb-6">
-                        <VideoSettings project={project} updateProject={updateProject} />
+                <div className="flex flex-col-reverse sm:flex-row sm:items-end sm:justify-between gap-6">
+                    {/* Left side: Settings (only on last step) */}
+                    <div className={`flex-1 ${!isLastStep ? 'hidden sm:block' : ''}`}>
+                        {isLastStep && <VideoSettings project={project} updateProject={updateProject} />}
                     </div>
-                )}
-                <div className="flex w-full items-center justify-end gap-4">
-                    <button
-                        onClick={handleBack}
-                        disabled={isLoading || currentStep === stepOrder[0]}
-                        className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                       Back
-                    </button>
-                    <button
-                        onClick={isLastStep ? handleGenerate : handleNext}
-                        disabled={isLoading}
-                        className="flex-1 sm:flex-initial sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                    >
-                        {isLastStep && isLoading ? (
-                            <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : isLastStep ? (
-                            <SparklesIcon className="w-6 h-6" />
-                        ) : null}
-                        {isLastStep && isLoading
-                            ? 'Generating...'
-                            : isLastStep
-                            ? `Generate (${cost} Credits)`
-                            : 'Next'}
-                    </button>
+                    
+                    {/* Right side: Actions */}
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <button
+                            onClick={handleBack}
+                            disabled={isLoading || currentStep === stepOrder[0]}
+                            className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                        Back
+                        </button>
+                        <button
+                            onClick={isLastStep ? handleGenerate : handleNext}
+                            disabled={isLoading}
+                            className="flex-1 sm:flex-initial sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                        >
+                            {isLastStep && isLoading ? (
+                                <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : isLastStep ? (
+                                <SparklesIcon className="w-6 h-6" />
+                            ) : null}
+                            {isLastStep && isLoading
+                                ? 'Generating...'
+                                : isLastStep
+                                ? `Generate (${cost} Credits)`
+                                : 'Next'}
+                        </button>
+                    </div>
                 </div>
-                 {error && <p className="text-right text-sm text-red-500 mt-2">{error}</p>}
+                {error && <p className="text-right text-sm text-red-500 mt-2">{error}</p>}
             </div>
+
+            <AvatarTemplateModal
+                isOpen={isAvatarModalOpen}
+                onClose={() => setIsAvatarModalOpen(false)}
+                onSelect={handleSelectTemplateCharacter}
+            />
         </div>
     );
 };
 
 // --- Step Components ---
 
-const ImageStep: React.FC<{ project: Project; updateProject: (u: Partial<Project>) => void; onSelectTemplate: (c: any) => void; }> = ({ project, updateProject, onSelectTemplate }) => (
-    <div>
-        <h3 className="text-xl font-bold mb-1">Product Placement</h3>
-        <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm">Upload your avatar, plus an optional product for placement in the video.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <h4 className="font-semibold mb-2 text-center">Upload Avatar</h4>
-                 {project.ugcAvatarFile ? (
-                    <div className="relative w-full h-auto aspect-square">
-                        <AssetPreview asset={project.ugcAvatarFile} objectFit="cover" />
-                        <button onClick={() => updateProject({ ugcAvatarFile: null })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
-                            <XMarkIcon className="w-5 h-5" />
-                        </button>
-                    </div>
-                ) : (
-                    <Uploader onUpload={(file) => updateProject({ ugcAvatarFile: file })} />
-                )}
-            </div>
-             <div>
-                <h4 className="font-semibold mb-2 text-center">Upload Product (Optional)</h4>
-                 {project.ugcProductFile ? (
-                    <div className="relative w-full h-auto aspect-square">
-                        <AssetPreview asset={project.ugcProductFile} objectFit="cover" />
-                        <button onClick={() => updateProject({ ugcProductFile: null })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
-                            <XMarkIcon className="w-5 h-5" />
-                        </button>
-                    </div>
-                ) : (
-                    <Uploader onUpload={(file) => updateProject({ ugcProductFile: file })} />
-                )}
-            </div>
-        </div>
-        <div className="mt-6">
-            <h4 className="font-semibold mb-2">Or Choose a Template Character</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {TEMPLATE_CHARACTERS.map(char => (
-                    <button key={char.name} onClick={() => onSelectTemplate(char)} className="relative rounded-lg overflow-hidden group border-2 border-transparent hover:border-blue-500 focus:border-blue-500 focus:outline-none">
-                        <img src={char.url} alt={char.name} className="w-full h-32 object-cover" />
-                        <div className="absolute inset-0 bg-black/40" />
-                        <p className="absolute bottom-2 left-2 text-white font-bold text-sm">{char.name}</p>
+const ProductStep: React.FC<{ project: Project; updateProject: (u: Partial<Project>) => void; }> = ({ project, updateProject }) => {
+    const handleProductUpload = (file: UploadedFile) => {
+        updateProject({ ugcProductFile: file });
+    };
+
+    return (
+        <div>
+            <h3 className="text-xl font-bold mb-1">Product Placement</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm">Feature a product in the video.</p>
+            
+            {project.ugcProductFile ? (
+                <div className="relative w-full max-w-sm h-auto aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                    <AssetPreview asset={project.ugcProductFile} objectFit="contain" />
+                    <button onClick={() => updateProject({ ugcProductFile: null })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
+                        <XMarkIcon className="w-5 h-5" />
                     </button>
-                ))}
+                </div>
+            ) : (
+                <div className="max-w-sm">
+                    <Uploader onUpload={handleProductUpload} title="Upload Product Image (Optional)" subtitle="" />
+                </div>
+            )}
+            
+            <div className="mt-4 flex items-center justify-between max-w-sm">
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-300">I don't want to feature a product in this video.</span>
+                <label className="relative inline-flex items-center cursor-default">
+                    <input type="checkbox" checked={!project.ugcProductFile} readOnly className="sr-only peer pointer-events-none" />
+                    <div className="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const ActionStep: React.FC<{ project: Project; updateProject: (u: Partial<Project>) => void; }> = ({ project, updateProject }) => (
     <div>
@@ -305,6 +307,55 @@ const SceneStep: React.FC<{ project: Project; updateProject: (u: Partial<Project
     );
 };
 
+const AvatarStep: React.FC<{ project: Project; updateProject: (u: Partial<Project>) => void; onOpenTemplateModal: () => void; }> = ({ project, updateProject, onOpenTemplateModal }) => (
+    <div>
+        <h3 className="text-xl font-bold mb-1">Choose Your Avatar</h3>
+        <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">Describe, select, or upload your own image</p>
+        
+        <div className="mb-6">
+            <label htmlFor="avatarDescription" className="font-semibold mb-2 block">Describe your Avatar</label>
+            <textarea
+                id="avatarDescription"
+                value={project.ugcAvatarDescription || ''}
+                onChange={(e) => updateProject({ ugcAvatarDescription: e.target.value })}
+                placeholder="e.g., A friendly woman in her late 20s with blonde hair, wearing a casual sweater."
+                className="w-full p-4 border rounded-lg h-24"
+            />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2">
+                {AVATAR_DESCRIPTIONS.map(desc => (
+                    <button
+                        key={desc.title}
+                        onClick={() => updateProject({ ugcAvatarDescription: desc.description })}
+                        className="p-3 border rounded-lg text-left h-full transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    >
+                        <p className="font-bold text-sm">{desc.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{desc.description}</p>
+                    </button>
+                ))}
+            </div>
+        </div>
+
+        <div>
+            <h4 className="font-semibold mb-2">Upload your own Avatar</h4>
+            <div className="max-w-sm">
+                {project.ugcAvatarFile ? (
+                    <div className="relative w-full h-auto aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                        <AssetPreview asset={project.ugcAvatarFile} objectFit="contain" />
+                        <button onClick={() => updateProject({ ugcAvatarFile: null })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                ) : (
+                    <Uploader onUpload={(file) => updateProject({ ugcAvatarFile: file })} title="Upload Avatar Image" subtitle="" />
+                )}
+            </div>
+            <button onClick={onOpenTemplateModal} className="mt-2 text-sm font-semibold text-blue-600 hover:underline">
+                Or choose from templates
+            </button>
+        </div>
+    </div>
+);
+
 const VideoSettings: React.FC<{ project: Project; updateProject: (u: Partial<Project>) => void; }> = ({ project, updateProject }) => {
      const aspectRatios: { value: Project['aspectRatio']; label: string; icon: React.ReactNode; }[] = [
         { value: '9:16', label: '9:16 (Vertical)', icon: <AspectRatioTallIcon className="w-5 h-5" /> },
@@ -312,21 +363,23 @@ const VideoSettings: React.FC<{ project: Project; updateProject: (u: Partial<Pro
         { value: '1:1', label: '1:1 (Square)', icon: <AspectRatioSquareIcon className="w-5 h-5" /> },
     ];
     return (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <GenericSelect
                 label="Aspect Ratio"
                 options={aspectRatios}
                 selectedValue={project.aspectRatio}
                 onSelect={(value) => updateProject({ aspectRatio: value as Project['aspectRatio'] })}
             />
-             <div className="flex flex-col">
-                <label className="font-semibold block mb-2">Cinematic Quality</label>
-                <div className="flex-grow flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Slow generation</p>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="cinematicQuality" checked={project.useCinematicQuality} onChange={e => updateProject({ useCinematicQuality: e.target.checked })} className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                    </label>
+             <div>
+                <label className="font-semibold block mb-2 text-sm">Cinematic Quality</label>
+                <div className="flex items-start gap-3">
+                    <div className='flex flex-col'>
+                        <label className="relative inline-flex items-center cursor-pointer mt-1">
+                            <input type="checkbox" id="cinematicQuality" checked={project.useCinematicQuality} onChange={e => updateProject({ useCinematicQuality: e.target.checked })} className="sr-only peer" />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        </label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Slower generation</p>
+                    </div>
                 </div>
              </div>
         </div>

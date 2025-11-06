@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { scrapeProductDetailsFromUrl, visualizeScrapedProduct } from '../services/geminiService';
+import { scrapeProductDetailsFromUrl, fetchScrapedProductImage } from '../services/geminiService';
 import type { UploadedFile, ScrapedProductDetails } from '../types';
 import { ProductSelectionModal } from './ProductSelectionModal';
 import { MagnifyingGlassIcon } from './icons';
@@ -54,18 +54,18 @@ export const ProductScraper: React.FC<ProductScraperProps> = ({ onProductScraped
         setIsModalOpen(false);
         // isScraping should already be true
         setError(null);
-        setStatusMessages(['Visualizing your product...']);
+        setStatusMessages(['Fetching product image...']);
         setIsLoading(true);
 
         try {
-            const file = await visualizeScrapedProduct(product);
+            const file = await fetchScrapedProductImage(product.imageUrl, url, product.productName);
             onProductScraped({
                 name: product.productName,
                 description: product.productDescription,
                 file,
             });
         } catch (e: any) {
-            setError(e.message || "Failed to create a visual for the product.");
+            setError(e.message || "Failed to retrieve the product image.");
         } finally {
             setIsLoading(false);
             setIsScraping(false); // End on completion/error of this step

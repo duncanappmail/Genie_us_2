@@ -46,6 +46,7 @@ export interface Project {
     ugcLanguage?: string;
     ugcAccent?: string;
     ugcSceneDescription?: string;
+    ugcAvatarDescription?: string;
 }
 
 export interface User {
@@ -53,7 +54,27 @@ export interface User {
     subscription: Subscription | null;
     credits: Credits | null;
     paymentMethod: PaymentMethod | null;
+    brandProfile: BrandProfile | null;
 }
+
+export interface BrandProfile {
+    userId: string;
+    websiteUrl: string;
+    businessName: string;
+    logoFile: UploadedFile | null;
+    fonts: {
+        header: string;
+        subHeader: string;
+        body: string;
+    };
+    colors: { label: string; hex: string }[];
+    missionStatements: string[];
+    brandValues: string[];
+    toneOfVoice: string[];
+    businessOverview: string;
+    brandAesthetics: string[];
+}
+
 
 export interface Subscription {
     plan: PlanName;
@@ -84,6 +105,7 @@ export interface Template {
     promptTemplate: string;
     imageGenerationPrompt: string;
     activeMonths?: number[];
+    type: 'image' | 'video';
 }
 
 export interface CampaignBrief {
@@ -110,6 +132,7 @@ export interface CampaignInspiration {
 export interface ScrapedProductDetails {
     productName: string;
     productDescription: string;
+    imageUrl: string;
 }
 
 export interface CampaignPackage {

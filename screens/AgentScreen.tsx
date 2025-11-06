@@ -47,7 +47,7 @@ export const AgentScreen: React.FC = () => {
                     <div>
                         <label className="font-semibold block mb-2">1. Upload Product Image</label>
                         {project.productFile ? (
-                            <div className="relative w-full h-auto aspect-square">
+                            <div className="relative w-full h-auto aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                                 <AssetPreview asset={project.productFile} />
                                 <button onClick={() => updateProject({ productFile: null })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
                                     <XMarkIcon className="w-5 h-5" />

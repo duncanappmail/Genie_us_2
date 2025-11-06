@@ -238,7 +238,7 @@ export const GeneratorScreen: React.FC = () => {
                     <div className="mb-6">
                         <label className="font-semibold block mb-2">Upload Product Image</label>
                         {project.productFile ? (
-                            <div className="relative w-48 h-48">
+                            <div className="relative w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                                 <AssetPreview asset={project.productFile} />
                                 <button onClick={() => updateProject({ productFile: null, productName: '', productDescription: '', campaignBrief: null })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
                                     <XMarkIcon className="w-5 h-5" />
@@ -286,7 +286,7 @@ export const GeneratorScreen: React.FC = () => {
                          {project.referenceFiles.length > 0 && !project.videoToExtend && (
                              <div className="flex flex-wrap gap-2 p-2">
                                 {project.referenceFiles.map((file, index) => (
-                                    <div key={index} className="relative group w-20 h-20">
+                                    <div key={index} className="relative group w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                                         <AssetPreview asset={file} />
                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
                                             {project.mode === 'Art Maker' && (

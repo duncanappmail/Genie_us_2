@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import type { User, PlanName } from '../types';
+import type { User, PlanName, BrandProfile } from '../types';
+import * as dbService from '../services/dbService';
+import * as geminiService from '../services/geminiService';
 import { useUI } from './UIContext';
 
 type AuthContextType = {
@@ -11,6 +13,9 @@ type AuthContextType = {
     handleCancelSubscription: () => void;
     handleReactivateSubscription: () => void;
     handleUpdatePaymentDetails: (details: { brand: string, last4: string, expiry: string }) => void;
+    handleFetchBrandProfile: (url: string) => Promise<void>;
+    handleUpdateBrandProfile: (profile: BrandProfile) => Promise<void>;
+    handleClearBrandProfile: () => Promise<void>;
     deductCredits: (amount: number) => void;
 };
 
@@ -18,10 +23,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const { navigateTo, goBack } = useUI();
+    const { navigateTo, goBack, setIsLoading, setAgentStatusMessages, setError } = useUI();
 
-    const handleLogin = useCallback((email: string) => {
-        const mockUser: User = { email, subscription: null, credits: null, paymentMethod: null };
+    const handleLogin = useCallback(async (email: string) => {
+        const brandProfile = await dbService.getBrandProfile(email);
+        const mockUser: User = { email, subscription: null, credits: null, paymentMethod: null, brandProfile };
         setUser(mockUser);
         navigateTo('PLAN_SELECT');
     }, [navigateTo]);
@@ -73,6 +79,69 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser({ ...user, paymentMethod: details });
         goBack();
     }, [user, goBack]);
+    
+    const handleUpdateBrandProfile = useCallback(async (profile: BrandProfile) => {
+        if (!user) return;
+        setUser({ ...user, brandProfile: profile });
+        await dbService.saveBrandProfile(profile);
+    }, [user]);
+
+    const handleClearBrandProfile = useCallback(async () => {
+        if (!user) return;
+        setUser({ ...user, brandProfile: null });
+        await dbService.deleteBrandProfile(user.email);
+    }, [user]);
+    
+    const handleFetchBrandProfile = useCallback(async (url: string) => {
+        if (!user) return;
+        
+        setIsLoading(true);
+        setError(null);
+        setAgentStatusMessages([]);
+
+        try {
+            setAgentStatusMessages([{ type: 'action', content: 'Analyzing website structure...' }]);
+            const profileData = await geminiService.extractBrandProfileFromUrl(url);
+            
+            setAgentStatusMessages(prev => [
+                { ...prev[0], type: 'done' },
+                { type: 'action', content: 'Extracting visual identity...' }
+            ]);
+
+            let logoFile = null;
+            if (profileData.logoUrl) {
+                logoFile = await geminiService.fetchLogo(profileData.logoUrl, url);
+            }
+             
+            setAgentStatusMessages(prev => [
+                ...prev.slice(0, -1),
+                { ...prev[prev.length - 1], type: 'done' },
+                { type: 'action', content: 'Finalizing brand profile...' }
+            ]);
+            
+            const fullProfile: BrandProfile = {
+                ...profileData,
+                logoFile,
+                websiteUrl: url,
+                userId: user.email,
+            };
+            
+            await handleUpdateBrandProfile(fullProfile);
+             setAgentStatusMessages(prev => [
+                ...prev.slice(0, -1),
+                { ...prev[prev.length - 1], type: 'done' }
+            ]);
+
+        } catch (e: any) {
+            console.error("Failed to fetch brand profile", e);
+            setError(e.message || "Could not retrieve brand information from the provided URL.");
+        } finally {
+            setIsLoading(false);
+            setAgentStatusMessages([]);
+        }
+
+    }, [user, setIsLoading, setError, setAgentStatusMessages, handleUpdateBrandProfile]);
+
 
     const deductCredits = useCallback((amount: number) => {
         setUser(prevUser => {
@@ -90,6 +159,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const value: AuthContextType = {
         user, setUser, handleLogin, handleLogout, handleSelectPlan,
         handleCancelSubscription, handleReactivateSubscription, handleUpdatePaymentDetails,
+        handleFetchBrandProfile, handleUpdateBrandProfile, handleClearBrandProfile,
         deductCredits
     };
 

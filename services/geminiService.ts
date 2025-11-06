@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, VideoGenerationReferenceImage, VideoGenerationReferenceType, GenerateContentResponse, Modality } from "@google/genai";
-import type { UploadedFile, CampaignBrief, CampaignInspiration, AdCopy, ScrapedProductDetails, PublishingPackage, PlatformPublishingContent, Project } from '../types';
+import type { UploadedFile, CampaignBrief, CampaignInspiration, AdCopy, ScrapedProductDetails, PublishingPackage, PlatformPublishingContent, Project, BrandProfile } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -11,6 +11,29 @@ const fileToGenerativePart = (file: UploadedFile) => {
             data: file.base64,
         },
     };
+};
+
+const fileToUploadedFile = async (file: File | Blob, name: string): Promise<UploadedFile> => {
+    const reader = new FileReader();
+    const blob = file;
+    return new Promise((resolve, reject) => {
+        reader.readAsDataURL(blob);
+        reader.onload = () => {
+            const base64 = (reader.result as string)?.split(',')[1];
+            if (!base64) {
+                reject(new Error("Failed to read file as base64"));
+                return;
+            }
+            resolve({
+                id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                base64,
+                mimeType: file.type || 'application/octet-stream',
+                name,
+                blob,
+            });
+        };
+        reader.onerror = error => reject(error);
+    });
 };
 
 export const generatePromptSuggestions = async (mode: string, productInfo?: { productName: string, productDescription: string }): Promise<string[]> => {
@@ -208,7 +231,7 @@ export const generatePublishingPackage = async (brief: CampaignBrief, prompt: st
 export const scrapeProductDetailsFromUrl = async (url: string): Promise<ScrapedProductDetails[]> => {
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: `I will provide a URL. Please act as a web scraper and extract the product name and a concise product description for all products listed on that page. URL: ${url}. Respond with only a JSON array of objects, each with "productName" and "productDescription" keys.`,
+        contents: `Using your search tool, find the product name, a concise product description, and the direct URL to the main product image for all products listed at the URL: ${url}. Respond ONLY with a raw JSON array of objects, where each object has "productName", "productDescription", and "imageUrl" keys. Do not include any introductory text, markdown formatting, or apologies.`,
         config: {
             tools: [{ googleSearch: {} }],
         }
@@ -229,28 +252,29 @@ export const scrapeProductDetailsFromUrl = async (url: string): Promise<ScrapedP
     }
 };
 
+export const fetchScrapedProductImage = async (imageUrl: string, websiteUrl: string, productName: string): Promise<UploadedFile> => {
+    try {
+        let validBaseUrl = websiteUrl;
+        if (!/^https?:\/\//i.test(validBaseUrl)) {
+            validBaseUrl = `https://${validBaseUrl}`;
+        }
+        
+        const absoluteImageUrl = new URL(imageUrl, validBaseUrl).href;
 
-export const visualizeScrapedProduct = async (product: ScrapedProductDetails): Promise<UploadedFile> => {
-    const response = await ai.models.generateImages({
-        model: 'imagen-4.0-generate-001',
-        prompt: `Create a clean, professional product image of "${product.productName}". The product should be on a plain white background with studio lighting. The image should be photorealistic and suitable for e-commerce.`,
-        config: {
-            numberOfImages: 1,
-            outputMimeType: 'image/jpeg',
-            aspectRatio: '1:1',
-        },
-    });
+        const response = await fetchWithProxies(absoluteImageUrl);
+        const blob = await response.blob();
 
-    const base64 = response.generatedImages[0].image.imageBytes;
-    const blob = await (await fetch(`data:image/jpeg;base64,${base64}`)).blob();
+        if (blob.size === 0) {
+            throw new Error(`Failed to fetch product image: Empty response received.`);
+        }
 
-    return {
-        id: `file_${Date.now()}`,
-        base64,
-        mimeType: 'image/jpeg',
-        name: `${product.productName.replace(/\s/g, '_')}.jpg`,
-        blob,
-    };
+        const imageName = absoluteImageUrl.substring(absoluteImageUrl.lastIndexOf('/') + 1).split('?')[0] || `${productName.replace(/\s/g, '_')}.jpg`;
+        
+        return await fileToUploadedFile(blob, imageName);
+    } catch (e) {
+        console.error("Failed to fetch and process product image:", e);
+        throw new Error('Could not download the product image from the provided URL. The image might be protected or the URL is incorrect.');
+    }
 };
 
 export const regenerateFieldCopy = async (
@@ -292,6 +316,193 @@ export const regenerateFieldCopy = async (
     return isHashtags ? (parsed as string[]).map(h => h.replace(/#/g, '')) : parsed;
 };
 
+export const extractBrandProfileFromUrl = async (url: string): Promise<Omit<BrandProfile, 'logoFile' | 'websiteUrl' | 'userId'> & { logoUrl?: string }> => {
+    const prompt = `
+    You are an expert AI Brand Analyst. Your task is to analyze the provided company URL and extract its "Brand DNA" by strictly adhering to the following process. Your primary method MUST be analyzing the website's code (HTML and CSS), not visual interpretation, to ensure accuracy and consistency.
+
+    **URL for Analysis:** ${url}
+
+    **Mandatory Extraction Process:**
+    1.  **Analyze CSS:** Use the search tool to locate and inspect the website's CSS. This includes linked stylesheets (\`<link rel="stylesheet">\`) and inline style blocks (\`<style>\`). This step is not optional.
+    2.  **Extract Fonts from CSS:**
+        *   For the "header" font, find the 'font-family' property applied to \`h1\` or \`h2\` elements.
+        *   For the "subHeader" font, find the 'font-family' property for \`h3\` or \`h4\`.
+        *   For the "body" font, find the 'font-family' property for \`p\` or \`body\`.
+        *   Provide the full font stack (e.g., "Helvetica Neue, Arial, sans-serif").
+    3.  **Extract Colors from CSS:**
+        *   Prioritize finding declared CSS variables (e.g., --primary-color, --brand-accent).
+        *   If variables are not found, identify the most frequently used hex codes for backgrounds, text, and buttons.
+        *   Assign these hex codes to logical labels (Primary, Secondary, etc.) based on their usage.
+    4.  **Extract Other Information:** Analyze the website's content to determine the business name, mission, values, tone, and aesthetics. Find the direct URL for the main logo image.
+
+    **Output Requirement:**
+    After completing the analysis, you MUST return a single, raw JSON object. Do not include any explanatory text, markdown formatting (like \`\`\`json), or any characters before or after the opening and closing curly braces. The JSON object must conform EXACTLY to the following structure:
+    {
+      "businessName": "The full, official name of the business.",
+      "logoUrl": "The direct, absolute URL to the primary logo image found in an <img> tag, typically in the header.",
+      "fonts": {
+        "header": "The font family stack found in the CSS for h1/h2.",
+        "subHeader": "The font family stack found in the CSS for h3/h4.",
+        "body": "The primary font family stack found in the CSS for body/p."
+      },
+      "colors": [
+        { "label": "Primary", "hex": "#RRGGBB" },
+        { "label": "Secondary", "hex": "#RRGGBB" },
+        { "label": "Accent", "hex": "#RRGGBB" },
+        { "label": "Neutral (Dark)", "hex": "#RRGGBB" },
+        { "label": "Neutral (Light)", "hex": "#RRGGBB" }
+      ],
+      "missionStatements": [
+        "A concise, inspiring statement about the company's purpose and drive.",
+        "A second, different statement summarizing the brand's mission.",
+        "A third variation of the mission statement."
+      ],
+      "businessOverview": "A comprehensive overview of the business: what they do, what they sell, their industry, and how their values and mission are reflected in their operations. This should be a detailed paragraph.",
+      "toneOfVoice": [
+        "A descriptor for the tone of voice (e.g., 'Playful and witty').",
+        "Another descriptor (e.g., 'Conversational').",
+        "A third descriptor (e.g., 'Enthusiastic')."
+      ],
+      "brandAesthetics": [
+        "A descriptor for the brand's visual look and feel (e.g., 'Minimal and clean').",
+        "Another descriptor (e.g., 'Bold and vibrant').",
+        "A third descriptor (e.g., 'Rustic and natural')."
+      ],
+      "brandValues": [
+        "A core value (e.g., 'Social Responsibility').",
+        "Another core value (e.g., 'Eco-minded Products').",
+        "A third core value (e.g., 'Safety and Efficacy')."
+      ]
+    }
+    `;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-pro',
+        contents: prompt,
+        config: {
+            tools: [{ googleSearch: {} }],
+        }
+    });
+
+    try {
+        let text = response.text.trim();
+        const jsonMatch = text.match(/```(?:json)?\n([\s\S]*?)\n```/);
+        if (jsonMatch) {
+            text = jsonMatch[1];
+        }
+        return JSON.parse(text);
+    } catch (e) {
+        console.error("Gemini API did not return valid JSON for extractBrandProfileFromUrl:", e);
+        console.error("Response text was:", response.text);
+        throw new Error("Failed to parse brand profile from website. The website might be blocking scrapers or the format is unreadable.");
+    }
+};
+
+const fetchWithProxies = async (url: string): Promise<Response> => {
+    // 1. Try a direct fetch first
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8-second timeout for direct fetch
+        const response = await fetch(url, { signal: controller.signal, mode: 'cors' });
+        clearTimeout(timeoutId);
+        if (response.ok) {
+            return response;
+        }
+    } catch (e) {
+        if (e instanceof Error && (e.name === 'TypeError' || e.name === 'AbortError')) {
+            // This is likely a CORS error or timeout, proceed to proxies.
+        } else {
+            console.error('Direct fetch failed with an unexpected error:', e);
+        }
+    }
+
+    // 2. If direct fetch fails, try proxies
+    const proxies = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
+        `https://thingproxy.freeboard.io/fetch/${url}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+        `https://cors.eu.org/${url}`
+    ];
+    
+    const PROXY_TIMEOUT = 15000; // Increased timeout to 15 seconds
+
+    for (const proxyUrl of proxies) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), PROXY_TIMEOUT);
+
+            const response = await fetch(proxyUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                // Check if the response body is not empty, as some proxies return 200 OK on failure.
+                const testBlob = await response.clone().blob();
+                if (testBlob.size > 0) {
+                    return response;
+                }
+                console.warn(`Proxy ${proxyUrl} returned an empty response.`);
+            } else {
+                console.warn(`Proxy ${proxyUrl} failed with status: ${response.statusText}`);
+            }
+        } catch (e) {
+            if (e instanceof Error && e.name === 'AbortError') {
+                console.warn(`Proxy ${proxyUrl} timed out.`);
+            } else {
+                console.warn(`Proxy ${proxyUrl} failed to fetch:`, e);
+            }
+        }
+    }
+
+    // 3. If all attempts fail, throw a clear error.
+    throw new Error('Failed to fetch the logo through all available proxies.');
+};
+
+
+export const fetchLogo = async (logoUrl: string, websiteUrl: string): Promise<UploadedFile | null> => {
+    try {
+        // Handle data URIs directly, as they don't require fetching.
+        if (logoUrl.startsWith('data:')) {
+            const response = await fetch(logoUrl);
+            const blob = await response.blob();
+            const mimeType = logoUrl.substring(logoUrl.indexOf(':') + 1, logoUrl.indexOf(';'));
+            const extension = mimeType.split('/')[1] || 'png';
+            const logoName = `logo_from_data_uri.${extension}`;
+            return await fileToUploadedFile(blob, logoName);
+        }
+        
+        // Ensure the base URL has a protocol.
+        let validBaseUrl = websiteUrl;
+        if (!/^https?:\/\//i.test(validBaseUrl)) {
+            validBaseUrl = `https://${validBaseUrl}`;
+        }
+
+        // Handle protocol-relative and relative URLs robustly
+        const absoluteLogoUrl = new URL(logoUrl, validBaseUrl).href;
+        
+        // Use a fetch function with proxy fallbacks to bypass CORS issues
+        const response = await fetchWithProxies(absoluteLogoUrl);
+        
+        const blob = await response.blob();
+
+        if (blob.size === 0) {
+            throw new Error(`Failed to fetch logo: Empty response received.`);
+        }
+
+        const logoName = absoluteLogoUrl.substring(absoluteLogoUrl.lastIndexOf('/') + 1).split('?')[0] || 'logo.png';
+
+        return await fileToUploadedFile(blob, logoName);
+    } catch (e) {
+        console.error("Failed to fetch and process logo:", e);
+        // Re-throw the specific error from fetchWithProxies if it exists
+        if (e instanceof Error && e.message.includes('proxies')) {
+             throw e;
+        }
+        // For other errors like invalid URLs, return null to fail gracefully.
+        return null;
+    }
+};
+
 export const generateUGCVideo = async (project: Project): Promise<UploadedFile> => {
     if (!project.ugcAvatarFile || !project.ugcScript) {
         throw new Error("An avatar and a script are required to generate a UGC video.");
@@ -299,6 +510,9 @@ export const generateUGCVideo = async (project: Project): Promise<UploadedFile> 
 
     // --- Build the composite prompt ---
     let prompt = `A UGC-style video of **this person** (referencing the avatar image).`;
+    if (project.ugcAvatarDescription) {
+        prompt += ` The person should be: **${project.ugcAvatarDescription}**.`;
+    }
     prompt += ` The scene is **${project.ugcSceneDescription || 'a neutral, clean background'}**.`;
 
     if (project.ugcProductFile) {

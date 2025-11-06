@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { AppStep } from '../App';
 
+export type AgentStatusMessage = {
+    type: 'thought' | 'action' | 'result' | 'done';
+    content: string;
+};
+
 type UIContextType = {
     appStep: AppStep;
     navigateTo: (step: AppStep) => void;
@@ -15,8 +20,8 @@ type UIContextType = {
     setIsCancelModalOpen: (isOpen: boolean) => void;
     theme: 'light' | 'dark';
     setTheme: (theme: 'light' | 'dark') => void;
-    agentStatusMessages: string[];
-    setAgentStatusMessages: React.Dispatch<React.SetStateAction<string[]>>;
+    agentStatusMessages: AgentStatusMessage[];
+    setAgentStatusMessages: React.Dispatch<React.SetStateAction<AgentStatusMessage[]>>;
     generationStatusMessages: string[];
     setGenerationStatusMessages: React.Dispatch<React.SetStateAction<string[]>>;
 };
@@ -31,7 +36,7 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [theme, rawSetTheme] = useState<'light' | 'dark'>('light');
-    const [agentStatusMessages, setAgentStatusMessages] = useState<string[]>([]);
+    const [agentStatusMessages, setAgentStatusMessages] = useState<AgentStatusMessage[]>([]);
     const [generationStatusMessages, setGenerationStatusMessages] = useState<string[]>([]);
 
     const setTheme = useCallback((newTheme: 'light' | 'dark') => {

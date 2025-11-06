@@ -4,7 +4,8 @@ import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
 import { 
     CoinIcon, SunIcon, MoonIcon, ArrowRightOnRectangleIcon, UserCircleIcon, 
-    HomeIcon, CreditCardIcon, Squares2X2Icon, MagnifyingGlassIcon, Bars3Icon, XMarkIcon
+    HomeIcon, CreditCardIcon, Squares2X2Icon, MagnifyingGlassIcon, Bars3Icon, XMarkIcon,
+    DNAIcon
 } from './icons';
 
 interface HeaderProps {
@@ -59,6 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
         { label: 'Home', icon: <HomeIcon className="w-5 h-5" />, action: onHome },
         { label: 'Explore Templates', icon: <MagnifyingGlassIcon className="w-5 h-5" />, action: () => onNavigate('EXPLORE') },
         { label: 'All Projects', icon: <Squares2X2Icon className="w-5 h-5" />, action: () => onNavigate('ALL_PROJECTS') },
+        { label: 'Brand DNA', icon: <DNAIcon className="w-5 h-5" />, action: () => onNavigate('BRANDING') },
         { label: 'My Account', icon: <UserCircleIcon className="w-5 h-5" />, action: () => onNavigate('SUBSCRIPTION') },
     ];
 
@@ -81,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
                                 </div>
                             </div>
                         )}
-                        {navLinks.slice(0, 3).map(link => (
+                        {navLinks.slice(0, 4).map(link => (
                              <div key={link.label} className="relative group flex items-center">
                                 <button onClick={link.action} className="p-2 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" aria-label={link.label}>
                                     {React.cloneElement(link.icon, { className: "w-6 h-6" })}

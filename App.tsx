@@ -16,6 +16,7 @@ import { AllProjectsScreen } from './screens/AllProjectsScreen';
 import { ExploreScreen } from './screens/ExploreScreen';
 import { AgentScreen } from './screens/AgentScreen';
 import { AgentResultScreen } from './screens/AgentResultScreen';
+import { BrandingScreen } from './screens/BrandingScreen';
 
 import { Header } from './components/Header';
 import { LoadingOverlay } from './components/LoadingOverlay';
@@ -26,7 +27,7 @@ import type { PlanName } from './types';
 
 
 // Define AppStep type
-export type AppStep = 'AUTH' | 'PLAN_SELECT' | 'HOME' | 'ALL_PROJECTS' | 'GENERATE' | 'UGC_GENERATE' | 'PREVIEW' | 'SUBSCRIPTION' | 'BILLING_HISTORY' | 'PAYMENT_DETAILS' | 'EXPLORE' | 'AGENT' | 'AGENT_RESULT';
+export type AppStep = 'AUTH' | 'PLAN_SELECT' | 'HOME' | 'ALL_PROJECTS' | 'GENERATE' | 'UGC_GENERATE' | 'PREVIEW' | 'SUBSCRIPTION' | 'BILLING_HISTORY' | 'PAYMENT_DETAILS' | 'EXPLORE' | 'AGENT' | 'AGENT_RESULT' | 'BRANDING';
 
 // --- Constants ---
 export const PLANS: Record<PlanName, any> = {
@@ -126,6 +127,8 @@ const App: React.FC = () => {
                 return <AgentScreen />;
             case 'AGENT_RESULT':
                 return <AgentResultScreen />;
+            case 'BRANDING':
+                return <BrandingScreen />;
             default:
                 return <HomeScreen />;
         }

@@ -5,6 +5,8 @@ import { SparklesIcon } from './icons'; // Using a relevant icon
 interface UploaderProps {
   onUpload: (file: UploadedFile) => void;
   compact?: boolean;
+  title?: string;
+  subtitle?: string;
 }
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -16,7 +18,7 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-export const Uploader: React.FC<UploaderProps> = ({ onUpload, compact = false }) => {
+export const Uploader: React.FC<UploaderProps> = ({ onUpload, compact = false, title, subtitle }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -99,9 +101,11 @@ export const Uploader: React.FC<UploaderProps> = ({ onUpload, compact = false })
       />
       <SparklesIcon className={`transition-transform duration-300 ${compact ? 'w-8 h-8' : 'w-10 h-10'} ${isDragging ? 'scale-110' : ''} text-gray-400 dark:text-gray-500`} />
       <p className={`font-semibold mt-3 ${compact ? 'text-sm' : 'text-base'} text-gray-600 dark:text-gray-400`}>
-        {isDragging ? "Drop your image here" : "Drag & drop an image"}
+        {isDragging ? "Drop your image here" : title || "Drag & drop an image"}
       </p>
-      <p className={`text-xs text-gray-500 dark:text-gray-500 ${compact ? 'mt-1' : 'mt-2'}`}>or click to browse</p>
+      <p className={`text-xs text-gray-500 dark:text-gray-500 ${compact ? 'mt-1' : 'mt-2'}`}>
+        {isDragging ? "" : (subtitle !== undefined ? subtitle : "or click to browse")}
+      </p>
     </div>
   );
 };

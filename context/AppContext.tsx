@@ -134,12 +134,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setProjects(userProjects);
     };
 
-    const handleLogin = (email: string) => {
+    const handleLogin = async (email: string) => {
+        const brandProfile = await dbService.getBrandProfile(email);
         const mockUser: User = {
             email,
             subscription: null,
             credits: null,
             paymentMethod: null,
+            // FIX: Added missing brandProfile property to satisfy the User type.
+            brandProfile,
         };
         setUser(mockUser);
         loadProjects(email);
