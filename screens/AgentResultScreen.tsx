@@ -11,6 +11,7 @@ import type { CampaignPackage, UploadedFile } from '../types';
 import { PromptDisplayModal } from '../components/PromptDisplayModal';
 import { CREDIT_COSTS } from '../App';
 import { SocialCopyEditor } from '../components/SocialCopyEditor';
+import { VideoLightbox } from '../components/VideoLightbox';
 
 export const AgentResultScreen: React.FC = () => {
     const { user } = useAuth();
@@ -29,6 +30,7 @@ export const AgentResultScreen: React.FC = () => {
     const [videoIndex, setVideoIndex] = useState(0);
     const [refinePrompt, setRefinePrompt] = useState('');
     const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+    const [lightboxAsset, setLightboxAsset] = useState<UploadedFile | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const campaignPackage: CampaignPackage | null = (currentProject && currentProject.mode === 'AI Agent' && currentProject.campaignBrief && currentProject.campaignInspiration && currentProject.publishingPackage && currentProject.generatedImages.length > 0)
@@ -93,6 +95,12 @@ export const AgentResultScreen: React.FC = () => {
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
         }
     };
+    
+    const handlePreviewClick = (asset: UploadedFile) => {
+        if (asset.mimeType.startsWith('video/')) {
+            setLightboxAsset(asset);
+        }
+    };
 
     const renderNav = (index: number, setIndex: React.Dispatch<React.SetStateAction<number>>, total: number) => (
         <div className="flex items-center justify-center gap-4 mt-4">
@@ -122,8 +130,8 @@ export const AgentResultScreen: React.FC = () => {
                     Show Prompt
                 </button>
             </div>
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center aspect-square flex-grow">
-                <AssetPreview asset={asset} />
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center aspect-square flex-grow group">
+                <AssetPreview asset={asset} onClick={handlePreviewClick} />
             </div>
             {isImage ? (
                 currentProject.generatedImages.length > 1 && renderNav(imageIndex, setImageIndex, currentProject.generatedImages.length)
@@ -220,6 +228,11 @@ export const AgentResultScreen: React.FC = () => {
                 </div>
             </div>
             <PromptDisplayModal isOpen={isPromptModalOpen} onClose={() => setIsPromptModalOpen(false)} prompt={currentProject.prompt} />
+            <VideoLightbox
+                isOpen={!!lightboxAsset}
+                onClose={() => setLightboxAsset(null)}
+                asset={lightboxAsset}
+            />
         </div>
     );
 };

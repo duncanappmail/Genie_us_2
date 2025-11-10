@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { CreativeMode, Project, Template } from '../types';
+import type { CreativeMode, Project, Template, UploadedFile } from '../types';
 import { AssetPreview } from '../components/AssetPreview';
 import { SparklesIcon, TrashIcon, DocumentTextIcon, UserCircleIcon, TshirtIcon, ImageIcon, VideoIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
 import { TEMPLATE_LIBRARY } from '../lib/templates';
 import { PromptDisplayModal } from '../components/PromptDisplayModal';
+import { VideoLightbox } from '../components/VideoLightbox';
 
 const GREETINGS = [
     'Ready to make some magic?',
@@ -29,6 +30,7 @@ export const HomeScreen: React.FC = () => {
     const [promptToShow, setPromptToShow] = useState<string | null>(null);
     const [greeting, setGreeting] = useState(GREETINGS[0]);
     const [activeTemplateType, setActiveTemplateType] = useState<'image' | 'video'>('image');
+    const [lightboxAsset, setLightboxAsset] = useState<UploadedFile | null>(null);
     const recentProjects = projects.slice(0, 5);
 
     useEffect(() => {
@@ -101,6 +103,12 @@ export const HomeScreen: React.FC = () => {
             navigateTo('AGENT_RESULT');
         } else {
             navigateTo('PREVIEW');
+        }
+    };
+    
+    const handlePreviewClick = (asset: UploadedFile) => {
+        if (asset.mimeType.startsWith('video/')) {
+            setLightboxAsset(asset);
         }
     };
 
@@ -250,7 +258,7 @@ export const HomeScreen: React.FC = () => {
                         return (
                             <div key={p.id} onClick={() => onViewProject(p)} className="cursor-pointer group bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
                                 <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative overflow-hidden">
-                                    {previewAsset ? <AssetPreview asset={previewAsset} objectFit="cover" hoverEffect={true} /> : <SparklesIcon className="w-12 h-12 text-gray-400" />}
+                                    {previewAsset ? <AssetPreview asset={previewAsset} objectFit="cover" hoverEffect={true} onClick={handlePreviewClick} /> : <SparklesIcon className="w-12 h-12 text-gray-400" />}
                                     <div className="absolute bottom-2 right-2 flex items-center gap-2">
                                         {p.generatedImages.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><ImageIcon className="w-4 h-4"/>{p.generatedImages.length}</div>}
                                         {p.generatedVideos.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><VideoIcon className="w-4 h-4"/>{p.generatedVideos.length}</div>}
@@ -283,6 +291,11 @@ export const HomeScreen: React.FC = () => {
                 onClose={() => setPromptToShow(null)}
                 prompt={promptToShow || ''}
                 title="Image Generation Prompt"
+            />
+            <VideoLightbox
+                isOpen={!!lightboxAsset}
+                onClose={() => setLightboxAsset(null)}
+                asset={lightboxAsset}
             />
         </div>
     );

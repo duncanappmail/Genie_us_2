@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
+import { VideoLightbox } from '../components/VideoLightbox';
 
 export const PreviewScreen: React.FC = () => {
     const { user } = useAuth();
@@ -33,6 +34,7 @@ export const PreviewScreen: React.FC = () => {
     const [refinePrompt, setRefinePrompt] = useState('');
     const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+    const [lightboxAsset, setLightboxAsset] = useState<UploadedFile | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     if (!project || !user) {
@@ -77,6 +79,12 @@ export const PreviewScreen: React.FC = () => {
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
         }
     };
+
+    const handlePreviewClick = (asset: UploadedFile) => {
+        if (asset.mimeType.startsWith('video/')) {
+            setLightboxAsset(asset);
+        }
+    };
     
     const renderNav = (index: number, setIndex: React.Dispatch<React.SetStateAction<number>>, total: number) => (
         <div className="flex items-center justify-center gap-4 mt-4">
@@ -106,8 +114,8 @@ export const PreviewScreen: React.FC = () => {
                     Show Prompt
                 </button>
             </div>
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center aspect-square">
-                <AssetPreview asset={asset} />
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center aspect-square group">
+                <AssetPreview asset={asset} onClick={handlePreviewClick} />
             </div>
             {isImage ? (
                 project.generatedImages.length > 1 && renderNav(imageIndex, setImageIndex, project.generatedImages.length)
@@ -209,6 +217,11 @@ export const PreviewScreen: React.FC = () => {
                 onClose={() => setIsPublishModalOpen(false)}
                 asset={assetToPublish}
                 project={project}
+            />
+            <VideoLightbox
+                isOpen={!!lightboxAsset}
+                onClose={() => setLightboxAsset(null)}
+                asset={lightboxAsset}
             />
         </div>
     );

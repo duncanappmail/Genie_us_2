@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import type { Project } from '../types';
+import type { Project, UploadedFile } from '../types';
 import { AssetPreview } from '../components/AssetPreview';
 import { ImageIcon, VideoIcon, MagnifyingGlassIcon, SparklesIcon, TrashIcon, LeftArrowIcon } from '../components/icons';
 import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
+import { VideoLightbox } from '../components/VideoLightbox';
 
 export const AllProjectsScreen: React.FC = () => {
     const { projects, setCurrentProject, setProjectToDelete } = useProjects();
     const { navigateTo, goBack } = useUI();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<'All' | 'Images' | 'Videos'>('All');
+    const [lightboxAsset, setLightboxAsset] = useState<UploadedFile | null>(null);
     
     const filteredProjects = projects.filter(p => {
         if (activeFilter === 'Images') return p.generatedImages.length > 0;
@@ -27,6 +29,12 @@ export const AllProjectsScreen: React.FC = () => {
             navigateTo('AGENT_RESULT');
         } else {
             navigateTo('PREVIEW');
+        }
+    };
+    
+    const handlePreviewClick = (asset: UploadedFile) => {
+        if (asset.mimeType.startsWith('video/')) {
+            setLightboxAsset(asset);
         }
     };
 
@@ -95,7 +103,7 @@ export const AllProjectsScreen: React.FC = () => {
                         return (
                             <div key={p.id} onClick={() => onViewProject(p)} className="cursor-pointer group bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
                                 <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative overflow-hidden">
-                                    {previewAsset ? <AssetPreview asset={previewAsset} objectFit="cover" hoverEffect={true} /> : <SparklesIcon className="w-12 h-12 text-gray-400" />}
+                                    {previewAsset ? <AssetPreview asset={previewAsset} objectFit="cover" hoverEffect={true} onClick={handlePreviewClick} /> : <SparklesIcon className="w-12 h-12 text-gray-400" />}
                                     <div className="absolute bottom-2 right-2 flex items-center gap-2">
                                         {p.generatedImages.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><ImageIcon className="w-5 h-5"/>{p.generatedImages.length}</div>}
                                         {p.generatedVideos.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><VideoIcon className="w-5 h-5"/>{p.generatedVideos.length}</div>}
@@ -123,6 +131,11 @@ export const AllProjectsScreen: React.FC = () => {
                     })}
                 </div>
             )}
+            <VideoLightbox
+                isOpen={!!lightboxAsset}
+                onClose={() => setLightboxAsset(null)}
+                asset={lightboxAsset}
+            />
         </div>
     );
 };
