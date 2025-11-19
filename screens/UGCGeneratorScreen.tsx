@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { CREDIT_COSTS } from '../constants';
 import { SparklesIcon, UGCImage, UGCAction, UGCAudioText, UGCBackground, XMarkIcon, AspectRatioSquareIcon, AspectRatioTallIcon, AspectRatioWideIcon, TshirtIcon, LeftArrowIcon } from '../components/icons';
-import type { Project, UploadedFile, UgcAvatarSource } from '../types';
+import type { Project, UploadedFile, UgcAvatarSource, Template } from '../types';
 import { Uploader } from '../components/Uploader';
 import { AssetPreview } from '../components/AssetPreview';
 import { GenericSelect } from '../components/GenericSelect';
@@ -13,6 +12,7 @@ import { AvatarTemplateModal } from '../components/AvatarTemplateModal';
 import { ProductScraper } from '../components/ProductScraper';
 import { generateCampaignBrief, fetchWithProxies, generateScriptFromTemplate, suggestAvatarFromContext, validateAvatarImage } from '../services/geminiService';
 import { TEMPLATE_LIBRARY } from '../lib/templates';
+import { ProgressStepper } from '../components/ProgressStepper';
 
 type UGCStep = 'Product' | 'Action' | 'Dialogue' | 'Scene' | 'Avatar';
 type TemplateStep = 'Setup' | 'Story' | 'Avatar' | 'Production';
@@ -158,14 +158,18 @@ export const UGCGeneratorScreen: React.FC = () => {
 
     // --- Template Mode Handlers ---
     
+    const getTemplateStepIndex = (step: TemplateStep) => {
+        return ['Setup', 'Story', 'Avatar', 'Production'].indexOf(step);
+    }
+    
     const handleTemplateNext = () => {
          if (templateStep === 'Setup') setTemplateStep('Story');
          else if (templateStep === 'Story') {
              // If using template avatar, skip Avatar step
              if (project.ugcAvatarSource !== 'upload' && project.ugcAvatarSource !== 'ai' && project.ugcAvatarSource !== 'template') {
-                 // Default to template if not explicitly changed
+                 // Default to template if not explicitly changed (e.g., user didn't toggle or change settings)
                   setTemplateStep('Production');
-             } else if (project.ugcAvatarSource === 'template') { // Assuming 'template' here means 'default template avatar' logic handled loosely, technically 'template' in source means from the library
+             } else if (project.ugcAvatarSource === 'template') { 
                   setTemplateStep('Production');
              } else {
                   setTemplateStep('Avatar');
@@ -218,93 +222,77 @@ export const UGCGeneratorScreen: React.FC = () => {
     // --- Render Logic ---
 
     if (isTemplateMode) {
+        const steps = ['Setup', 'Story', 'Avatar', 'Production'];
+        
         return (
-            <div className="max-w-5xl mx-auto">
-                <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 text-gray-500 hover:text-gray-900 dark:hover:text-gray-300">
-                    <LeftArrowIcon className="w-4 h-4"/> Back
-                </button>
-
-                <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        {currentTemplate?.title || 'Create Video'}
-                    </h2>
-                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <span className={`px-2 py-1 rounded-full ${templateStep === 'Setup' ? 'bg-brand-accent text-on-accent' : 'bg-gray-200 dark:bg-gray-700'}`}>1. Setup</span>
-                        <span className={`px-2 py-1 rounded-full ${templateStep === 'Story' ? 'bg-brand-accent text-on-accent' : 'bg-gray-200 dark:bg-gray-700'}`}>2. Story</span>
-                        <span className={`px-2 py-1 rounded-full ${templateStep === 'Avatar' ? 'bg-brand-accent text-on-accent' : 'bg-gray-200 dark:bg-gray-700'}`}>3. Avatar</span>
-                        <span className={`px-2 py-1 rounded-full ${templateStep === 'Production' ? 'bg-brand-accent text-on-accent' : 'bg-gray-200 dark:bg-gray-700'}`}>4. Finish</span>
+            <div className="max-w-4xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <div className="flex items-center gap-4">
+                        {templateStep !== 'Setup' && (
+                            <button onClick={handleTemplateBack} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 -ml-2">
+                                <LeftArrowIcon className="w-6 h-6" />
+                            </button>
+                        )}
+                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                            {currentTemplate?.title || 'Create Video'}
+                        </h2>
                     </div>
+                    <ProgressStepper steps={steps} currentStepIndex={getTemplateStepIndex(templateStep)} />
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Template Preview (Visible on all steps for context) */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden sticky top-24">
-                            <div className="aspect-[9/16] relative">
-                                <img src={currentTemplate?.previewImageUrl} alt="Template Preview" className="w-full h-full object-cover" />
-                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                                    <p className="text-white text-sm font-medium">{currentTemplate?.sceneDescription}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    {templateStep === 'Setup' && (
+                        <TemplateSetupStep 
+                            project={project} 
+                            updateProject={updateProject}
+                            isAnalyzing={isAnalyzing}
+                            handleUGCProductUpload={handleUGCProductUpload}
+                            handleUGCProductScraped={handleUGCProductScraped}
+                            setIsLoading={setIsLoading}
+                            setGenerationStatusMessages={setGenerationStatusMessages}
+                            setError={setError}
+                            currentTemplate={currentTemplate}
+                        />
+                    )}
+                    {templateStep === 'Story' && (
+                        <TemplateStoryStep 
+                            project={project} 
+                            updateProject={updateProject} 
+                            isLoading={isLoading}
+                            setIsLoading={setIsLoading}
+                        />
+                    )}
+                    {templateStep === 'Avatar' && (
+                         <TemplateAvatarStep 
+                            project={project} 
+                            updateProject={updateProject}
+                            handleAvatarUpload={handleAvatarUpload}
+                            onOpenTemplateModal={() => setIsAvatarModalOpen(true)}
+                         />
+                    )}
+                    {templateStep === 'Production' && (
+                         <VideoSettings project={project} updateProject={updateProject} />
+                    )}
 
-                    {/* Right Column: Wizard Content */}
-                    <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 h-fit">
-                        {templateStep === 'Setup' && (
-                            <TemplateSetupStep 
-                                project={project} 
-                                updateProject={updateProject}
-                                isAnalyzing={isAnalyzing}
-                                handleUGCProductUpload={handleUGCProductUpload}
-                                handleUGCProductScraped={handleUGCProductScraped}
-                                setIsLoading={setIsLoading}
-                                setGenerationStatusMessages={setGenerationStatusMessages}
-                                setError={setError}
-                            />
-                        )}
-                        {templateStep === 'Story' && (
-                            <TemplateStoryStep 
-                                project={project} 
-                                updateProject={updateProject} 
-                                isLoading={isLoading}
-                                setIsLoading={setIsLoading}
-                            />
-                        )}
-                        {templateStep === 'Avatar' && (
-                             <TemplateAvatarStep 
-                                project={project} 
-                                updateProject={updateProject}
-                                handleAvatarUpload={handleAvatarUpload}
-                                onOpenTemplateModal={() => setIsAvatarModalOpen(true)}
-                             />
-                        )}
-                        {templateStep === 'Production' && (
-                             <VideoSettings project={project} updateProject={updateProject} />
-                        )}
-
-                        {/* Navigation Actions */}
-                        <div className="mt-8 flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                            <button onClick={handleTemplateBack} disabled={templateStep === 'Setup'} className="px-6 py-2 font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white disabled:opacity-50">
-                                Back
-                            </button>
-                            <button 
-                                onClick={templateStep === 'Production' ? handleGenerate : handleTemplateNext} 
-                                disabled={isLoading || (templateStep === 'Setup' && project.ugcType === 'product_showcase' && !project.ugcProductFile)}
-                                className="px-8 py-3 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors flex items-center gap-2"
-                            >
-                                {isLoading && templateStep === 'Production' ? (
-                                    <><div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div> Generating...</>
-                                ) : templateStep === 'Production' ? (
-                                     <><span>Generate</span><SparklesIcon className="w-5 h-5" /><span>{cost}</span></>
-                                ) : (
-                                    'Next'
-                                )}
-                            </button>
-                        </div>
-                         {error && <p className="text-right text-sm text-red-500 mt-2">{error}</p>}
+                    {/* Navigation Actions */}
+                    <div className="mt-8 flex items-center justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <button 
+                            onClick={templateStep === 'Production' ? handleGenerate : handleTemplateNext} 
+                            disabled={isLoading || (templateStep === 'Setup' && project.ugcType === 'product_showcase' && !project.ugcProductFile)}
+                            className="px-8 py-3 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors flex items-center gap-2"
+                        >
+                            {isLoading && templateStep === 'Production' ? (
+                                <><div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div> Generating...</>
+                            ) : templateStep === 'Production' ? (
+                                 <><span>Generate</span><SparklesIcon className="w-5 h-5" /><span>{cost}</span></>
+                            ) : (
+                                'Continue'
+                            )}
+                        </button>
                     </div>
+                     {error && <p className="text-right text-sm text-red-500 mt-2">{error}</p>}
                 </div>
+                
                  <AvatarTemplateModal
                     isOpen={isAvatarModalOpen}
                     onClose={() => setIsAvatarModalOpen(false)}
@@ -414,35 +402,64 @@ const TemplateSetupStep: React.FC<{
     setIsLoading: (loading: boolean) => void;
     setGenerationStatusMessages: (messages: string[]) => void;
     setError: (error: string | null) => void;
+    currentTemplate: Template | null | undefined;
 }> = ({
-    project, updateProject, isAnalyzing, handleUGCProductUpload, handleUGCProductScraped, setIsLoading, setGenerationStatusMessages, setError
+    project, updateProject, isAnalyzing, handleUGCProductUpload, handleUGCProductScraped, setIsLoading, setGenerationStatusMessages, setError, currentTemplate
 }) => {
     const isShowcase = project.ugcType === 'product_showcase';
     const useTemplateAvatar = project.ugcAvatarSource !== 'upload' && project.ugcAvatarSource !== 'ai';
+    
+    const SelectionCard = ({ type, title, description, imageUrl }: { type: 'talking_head' | 'product_showcase', title: string, description: string, imageUrl?: string }) => {
+         const isSelected = project.ugcType === type;
+         
+         return (
+             <button 
+                onClick={() => updateProject({ ugcType: type })}
+                className={`group text-left flex flex-col items-center w-full max-w-[14rem]`}
+            >
+                <div className={`relative overflow-hidden rounded-xl aspect-[9/16] w-full bg-gray-100 dark:bg-gray-800 border-2 transition-all duration-300 ${isSelected ? 'border-brand-accent ring-1 ring-brand-accent' : 'border-gray-200 dark:border-gray-700 group-hover:border-gray-300 dark:group-hover:border-gray-600'}`}>
+                    <img 
+                        src={imageUrl} 
+                        alt={title} 
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                    />
+                </div>
+                <div className="mt-3 text-center">
+                    <h3 className={`text-base font-bold transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-800 dark:text-gray-100'} group-hover:text-brand-accent`}>
+                        {title}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        {description}
+                    </p>
+                </div>
+            </button>
+         );
+    };
 
     return (
         <div className="space-y-8">
-            <div className="grid grid-cols-2 gap-4">
-                <button 
-                    onClick={() => updateProject({ ugcType: 'talking_head' })}
-                    className={`p-6 border-2 rounded-xl text-center transition-all ${project.ugcType === 'talking_head' ? 'border-brand-accent bg-brand-accent/5' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400'}`}
-                >
-                    <span className="text-2xl block mb-2">🗣️</span>
-                    <h3 className="font-bold text-lg">Just Talking</h3>
-                    <p className="text-sm text-gray-500">Avatar talks directly to camera</p>
-                </button>
-                <button 
-                     onClick={() => updateProject({ ugcType: 'product_showcase' })}
-                     className={`p-6 border-2 rounded-xl text-center transition-all ${isShowcase ? 'border-brand-accent bg-brand-accent/5' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400'}`}
-                >
-                    <span className="text-2xl block mb-2">🛍️</span>
-                    <h3 className="font-bold text-lg">Selling a Product</h3>
-                    <p className="text-sm text-gray-500">Avatar interacts with a product</p>
-                </button>
+            {/* Main Selection Section */}
+            <div>
+                <h2 className="text-xl font-bold text-center mb-6 text-gray-900 dark:text-white">What is the goal of this video?</h2>
+                
+                <div className="flex flex-col sm:flex-row justify-center items-center sm:items-start gap-8"> 
+                    <SelectionCard 
+                        type="talking_head" 
+                        title="Just Talking" 
+                        description="Avatar delivers a message."
+                        imageUrl={currentTemplate?.previewImageUrl}
+                    />
+                    <SelectionCard 
+                        type="product_showcase" 
+                        title="Selling a Product" 
+                        description="Avatar showcases a product."
+                        imageUrl="https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2011.01.23%E2%80%AFAM.png"
+                    />
+                </div>
             </div>
 
             {isShowcase && (
-                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-50 dark:bg-gray-700/30 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mx-auto w-full max-w-[30rem]">
                     <h4 className="font-bold mb-4">Upload Product</h4>
                      <div className="space-y-4">
                          <ProductScraper
@@ -452,8 +469,8 @@ const TemplateSetupStep: React.FC<{
                             setError={setError}
                         />
                         <div className="relative my-2">
-                            <div className="absolute inset-0 flex items-center" aria-hidden="true"><div className="w-full border-t border-gray-300 dark:border-gray-700" /></div>
-                            <div className="relative flex justify-center text-sm"><span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">OR</span></div>
+                            <div className="absolute inset-0 flex items-center" aria-hidden="true"><div className="w-full border-t border-gray-300 dark:border-gray-600" /></div>
+                            <div className="relative flex justify-center text-sm"><span className="bg-gray-50 dark:bg-gray-700 px-2 text-gray-500 dark:text-gray-400">OR</span></div>
                         </div>
                          {isAnalyzing ? (
                             <div className="w-full h-32 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
@@ -473,7 +490,7 @@ const TemplateSetupStep: React.FC<{
                 </div>
             )}
 
-            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 mx-auto w-full max-w-[30rem]">
                 <div>
                     <span className="font-bold block text-gray-900 dark:text-gray-200">Use Template Character?</span>
                     <span className="text-sm text-gray-500 dark:text-gray-400">Uncheck to customize the avatar</span>
@@ -483,7 +500,6 @@ const TemplateSetupStep: React.FC<{
                         type="checkbox" 
                         checked={useTemplateAvatar} 
                         onChange={() => {
-                             // If unchecking, set to 'ai' to enable customization step. If checking, remove custom fields to revert to 'template default' (conceptually)
                             if (useTemplateAvatar) {
                                 updateProject({ ugcAvatarSource: 'ai' });
                             } else {
@@ -492,7 +508,7 @@ const TemplateSetupStep: React.FC<{
                         }} 
                         className="sr-only peer" 
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-accent"></div>
+                    <div className="w-11 h-6 bg-black rounded-full peer peer-checked:bg-[#91EB23] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                 </label>
             </div>
         </div>
@@ -517,36 +533,44 @@ const TemplateStoryStep: React.FC<{ project: Project; updateProject: (u: Partial
 
     return (
         <div className="space-y-6">
+             {/* Action Section (Moved to Top) */}
             <div>
-                <div className="flex justify-between items-center mb-2">
-                    <label className="font-bold text-lg">Script</label>
-                    <button 
-                        onClick={handleMagicScript} 
-                        disabled={isGeneratingScript || isLoading}
-                        className="text-sm text-brand-accent font-semibold hover:underline flex items-center gap-1 disabled:opacity-50"
-                    >
-                        {isGeneratingScript ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div> : <SparklesIcon className="w-4 h-4"/>}
-                        Write for me
-                    </button>
-                </div>
-                <textarea
-                    value={project.ugcScript}
-                    onChange={(e) => updateProject({ ugcScript: e.target.value })}
-                    placeholder="Enter what the avatar should say..."
-                    className="w-full p-4 border rounded-lg h-40 input-focus-brand"
-                />
-            </div>
-            <div>
-                <label className="font-bold text-lg block mb-2">Action</label>
+                <label className="font-bold text-lg block mb-2 text-gray-900 dark:text-white">Action</label>
+                <p className="text-sm text-gray-500 mb-2">What is the avatar doing?</p>
                 <textarea
                      value={project.ugcAction}
                      onChange={(e) => updateProject({ ugcAction: e.target.value })}
-                     className="w-full p-4 border rounded-lg h-24 input-focus-brand bg-gray-50 dark:bg-gray-700/30"
+                     className="w-full p-4 border rounded-lg h-24 input-focus-brand bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white dark:border-gray-700"
                 />
             </div>
-             <div className="grid grid-cols-2 gap-4">
-                <GenericSelect label="Voice" options={['Auto', 'Male', 'Female'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcVoice || 'Auto'} onSelect={(v) => updateProject({ ugcVoice: v as string })} />
-                <GenericSelect label="Language" options={['English'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcLanguage || 'English'} onSelect={(v) => updateProject({ ugcLanguage: v as string })} />
+
+             {/* Dialogue Section */}
+            <div className="relative">
+                <label className="font-bold text-lg mb-2 block text-gray-900 dark:text-white">Dialogue / Script</label>
+                <div className="relative">
+                    <textarea
+                        value={project.ugcScript}
+                        onChange={(e) => updateProject({ ugcScript: e.target.value })}
+                        placeholder="Enter what the avatar should say..."
+                        className="w-full p-4 pb-12 border rounded-lg h-48 input-focus-brand text-gray-900 dark:text-white bg-white dark:bg-black dark:border-gray-700"
+                    />
+                    {/* Magic Button inside textarea */}
+                    <button 
+                        onClick={handleMagicScript} 
+                        disabled={isGeneratingScript || isLoading}
+                        className="absolute bottom-3 right-3 text-xs bg-brand-accent text-on-accent px-3 py-1.5 rounded-md font-semibold hover:bg-brand-accent-hover flex items-center gap-1 disabled:opacity-50 shadow-sm z-10 transition-colors"
+                    >
+                        {isGeneratingScript ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div> : <SparklesIcon className="w-3 h-3"/>}
+                        Write for me
+                    </button>
+                </div>
+            </div>
+
+             {/* Voice Settings */}
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <GenericSelect label="Emotion" options={['Auto', 'Happy', 'Excited', 'Serious', 'Calm'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcEmotion || 'Auto'} onSelect={(v) => updateProject({ ugcEmotion: v as string })} />
+                <GenericSelect label="Accent" options={['American', 'British', 'Australian'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcAccent || 'American'} onSelect={(v) => updateProject({ ugcAccent: v as string })} />
+                <GenericSelect label="Language" options={['English', 'Spanish', 'French', 'German', 'Japanese'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcLanguage || 'English'} onSelect={(v) => updateProject({ ugcLanguage: v as string })} />
             </div>
         </div>
     );
@@ -555,7 +579,7 @@ const TemplateStoryStep: React.FC<{ project: Project; updateProject: (u: Partial
 const TemplateAvatarStep: React.FC<{ 
     project: Project; 
     updateProject: (u: Partial<Project>) => void; 
-    handleAvatarUpload: (file: UploadedFile) => void;
+    handleAvatarUpload: (file: UploadedFile) => void; 
     onOpenTemplateModal: () => void;
 }> = ({ project, updateProject, handleAvatarUpload, onOpenTemplateModal }) => {
     const [isSuggesting, setIsSuggesting] = useState(false);
@@ -615,7 +639,6 @@ const TemplateAvatarStep: React.FC<{
 
 // --- STANDARD STEPS (Reused) ---
 // ... (Existing Step Components: ProductStep, ActionStep, DialogueStep, SceneStep, AvatarStep) ...
-// Included in the full file above for completeness, but functionally unchanged except for slight styling tweaks.
 
 const ProductStep: React.FC<{
     project: Project;

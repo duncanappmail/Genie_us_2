@@ -48,7 +48,8 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
     
     const onThemeChange = () => {
         setTheme(theme === 'light' ? 'dark' : 'light');
-        setIsMobileMenuOpen(false);
+        // Close dropdown if open (for desktop)
+        setIsMenuOpen(false);
     }
     
     const onLogout = () => {
@@ -93,14 +94,7 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
                                 </div>
                             </div>
                         ))}
-                        <div className="relative group flex items-center">
-                            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="Toggle theme">
-                                {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
-                            </button>
-                             <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-40">
-                                {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                            </div>
-                        </div>
+                        
                         <div className="relative group" ref={menuRef}>
                             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="User menu">
                                 <UserCircleIcon className="w-6 h-6" />
@@ -110,12 +104,16 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
                             </div>
                             {isMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 border border-gray-200 dark:border-gray-700 z-40">
-                                    <div className="px-4 py-3 border-b dark:border-gray-600">
+                                    <div className="px-4 py-3 border-b dark:border-[#2B2B2B]">
                                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.email}</p>
                                         {user.subscription && <p className="text-xs text-gray-500 dark:text-gray-400">{user.subscription.plan} Plan</p>}
                                     </div>
                                     <button onClick={() => onNavigate('SUBSCRIPTION')} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
                                         <CreditCardIcon className="w-4 h-4" /> Subscription
+                                    </button>
+                                    <button onClick={onThemeChange} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                                        {theme === 'light' ? <MoonIcon className="w-4 h-4" /> : <SunIcon className="w-4 h-4" />}
+                                        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
                                     </button>
                                     <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
                                         <ArrowRightOnRectangleIcon className="w-4 h-4" /> Sign Out
@@ -154,7 +152,7 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
                                 ))}
                             </nav>
                             <div className="mt-auto border-t pt-4 space-y-2">
-                                <button onClick={onThemeChange} className="w-full flex items-center gap-4 p-4 text-lg font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                                <button onClick={() => { setTheme(theme === 'light' ? 'dark' : 'light'); setIsMobileMenuOpen(false); }} className="w-full flex items-center gap-4 p-4 text-lg font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
                                     {theme === 'light' ? <MoonIcon className="w-5 h-5"/> : <SunIcon className="w-5 h-5"/>}
                                     {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
                                 </button>

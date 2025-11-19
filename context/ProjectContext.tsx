@@ -68,7 +68,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setError, 
         setIsExtendModalOpen,
         setGenerationStatusMessages,
-        setAgentStatusMessages
+        setAgentStatusMessages,
+        setProductAdStep
     } = useUI();
 
     const [projects, setProjects] = useState<Project[]>([]);
@@ -89,6 +90,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         
         // Clear any lingering template state when starting fresh
         setTemplateToApply(null);
+        
+        // Reset the wizard step for Product Ad flow
+        setProductAdStep(1);
 
         const newProject: Project = {
             id: `proj_${Date.now()}`,
@@ -126,7 +130,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             newProject.aspectRatio = '1:1';
             navigateTo('GENERATE');
         }
-    }, [user, navigateTo]);
+    }, [user, navigateTo, setProductAdStep]);
 
     const selectTemplate = useCallback((template: Template) => {
         if (!user) return;
