@@ -1,3 +1,4 @@
+
 import type { Modality } from "@google/genai";
 
 export interface UploadedFile {
@@ -10,6 +11,8 @@ export interface UploadedFile {
 
 export type CreativeMode = 'Product Ad' | 'Art Maker' | 'Video Maker' | 'Create a UGC Video' | 'AI Agent';
 export type PlanName = 'Free' | 'Basic' | 'Pro';
+export type AdStyle = 'Creative Placement' | 'UGC' | 'Social Proof';
+export type UgcAvatarSource = 'ai' | 'upload' | 'template';
 
 export interface Project {
     id: string;
@@ -20,12 +23,12 @@ export interface Project {
     productFile: UploadedFile | null;
     productName: string;
     productDescription: string;
+    websiteUrl?: string;
     campaignBrief: CampaignBrief | null;
     generatedImages: UploadedFile[];
     generatedVideos: UploadedFile[];
     aspectRatio: '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
     batchSize: number;
-    stylePreset: string | null;
     useCinematicQuality: boolean;
     startFrame?: UploadedFile | null;
     endFrame?: UploadedFile | null;
@@ -36,7 +39,15 @@ export interface Project {
     publishingPackage?: PublishingPackage | null;
     campaignInspiration?: CampaignInspiration | null;
     campaignStrategy?: string | null;
+    imageModel?: string;
+    videoModel?: string;
+    videoDuration?: number;
+    videoResolution?: '720p' | '1080p';
+    imageQuality?: 'low' | 'medium' | 'high';
+    templateId?: string;
+    adStyle?: AdStyle;
     // For UGC Factory
+    ugcType?: 'talking_head' | 'product_showcase';
     ugcScript?: string;
     ugcAvatarFile?: UploadedFile | null;
     ugcProductFile?: UploadedFile | null;
@@ -47,6 +58,7 @@ export interface Project {
     ugcAccent?: string;
     ugcSceneDescription?: string;
     ugcAvatarDescription?: string;
+    ugcAvatarSource?: UgcAvatarSource;
 }
 
 export interface User {
@@ -94,7 +106,7 @@ export interface PaymentMethod {
     expiry: string;
 }
 
-export type TemplateCategory = 'All' | 'Holidays & Events' | 'Seasonal' | 'Studio' | 'Lifestyle' | 'Surreal';
+export type TemplateCategory = 'All' | 'Holidays & Events' | 'Seasonal' | 'Studio' | 'Lifestyle' | 'Surreal' | 'UGC';
 
 export interface Template {
     id: string;
@@ -106,6 +118,9 @@ export interface Template {
     imageGenerationPrompt: string;
     activeMonths?: number[];
     type: 'image' | 'video';
+    animationPrompt?: string;
+    sceneDescription?: string;
+    ugcAction?: string;
 }
 
 export interface CampaignBrief {
@@ -129,10 +144,20 @@ export interface CampaignInspiration {
     artDirection: string;
 }
 
+export interface UGCScriptIdea {
+    hook: string;
+    script: string;
+}
+
+export interface SocialProofIdea {
+    hook: string;
+    review: string;
+}
+
 export interface ScrapedProductDetails {
     productName: string;
     productDescription: string;
-    imageUrl: string;
+    imageUrl?: string;
 }
 
 export interface CampaignPackage {

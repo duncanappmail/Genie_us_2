@@ -79,8 +79,8 @@ export const Uploader: React.FC<UploaderProps> = ({ onUpload, compact = false, t
     cursor-pointer transition-all duration-300
     ${compact ? 'h-32' : 'h-48'}
     ${isDragging 
-      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-      : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800/50'}
+      ? 'border-[#91EB23] bg-[#91EB23]/10' 
+      : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-[#1C1E20]'}
   `;
 
   return (
@@ -100,10 +100,10 @@ export const Uploader: React.FC<UploaderProps> = ({ onUpload, compact = false, t
         accept="image/*"
       />
       <SparklesIcon className={`transition-transform duration-300 ${compact ? 'w-8 h-8' : 'w-10 h-10'} ${isDragging ? 'scale-110' : ''} text-gray-400 dark:text-gray-500`} />
-      <p className={`font-semibold mt-3 ${compact ? 'text-sm' : 'text-base'} text-gray-600 dark:text-gray-400`}>
+      <p className={`font-semibold mt-3 ${compact ? 'text-sm' : 'text-base'} text-gray-600 dark:text-[#525252]`}>
         {isDragging ? "Drop your image here" : title || "Drag & drop an image"}
       </p>
-      <p className={`text-xs text-gray-500 dark:text-gray-500 ${compact ? 'mt-1' : 'mt-2'}`}>
+      <p className={`text-xs text-gray-500 dark:text-[#525252] ${compact ? 'mt-1' : 'mt-2'}`}>
         {isDragging ? "" : (subtitle !== undefined ? subtitle : "or click to browse")}
       </p>
     </div>

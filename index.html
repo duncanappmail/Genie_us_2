@@ -6,35 +6,13 @@
     <title>GenieUs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Basic styles for dark mode */
-        .dark {
-            background-color: #111827;
-            color: #f3f4f6;
+        :root {
+            --color-brand-accent: #91EB23;
+            --color-brand-accent-hover: #75CB0C;
+            --color-brand-accent-hover-subtle: #86DB1E;
+            --color-brand-text-on-accent: #050C26;
+            --color-brand-focus: #C4C4C4;
         }
-        .dark .bg-white { background-color: #1f2937; }
-        .dark .bg-slate-50 { background-color: #111827; }
-        .dark .text-gray-900 { color: #f9fafb; }
-        .dark .text-gray-800 { color: #f9fafb; }
-        .dark .text-gray-700 { color: #d1d5db; }
-        .dark .text-gray-600 { color: #9ca3af; }
-        .dark .text-gray-500 { color: #6b7280; }
-        .dark .border-gray-200 { border-color: #374151; }
-        .dark .border-gray-300 { border-color: #4b5563; }
-        .dark input, .dark textarea, .dark select {
-            background-color: #111827;
-            color: #f9fafb;
-            border-color: #4b5563;
-        }
-        .dark input::placeholder, .dark textarea::placeholder {
-            color: #9ca3af;
-        }
-        .dark .hover\:bg-gray-50:hover { background-color: #374151; }
-        .dark .hover\:bg-gray-100:hover { background-color: #374151; }
-        .dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.15); }
-        .dark .bg-red-50 { background-color: #450a0a; }
-        .dark .border-red-200 { border-color: #7f1d1d; }
-        .dark .text-red-800 { color: #fca5a5; }
-        .dark .text-red-600 { color: #f87171; }
 
         /* Page transition animation */
         @keyframes fadeIn {
@@ -79,30 +57,186 @@
             transition-duration: 200ms;
             border-color: #d1d5db; /* border-gray-300 */
         }
-        .dark .action-btn {
-            border-color: #4b5563; /* border-gray-600 */
+        button.action-btn:disabled {
+            border-color: #e5e7eb !important; /* border-gray-200 */
+            color: #9ca3af !important; /* text-gray-400 */
+            background-color: transparent !important;
+            cursor: not-allowed !important;
         }
-        .action-btn:hover:not(:disabled) {
-            background-color: #f9fafb; /* bg-gray-50 */
+        .dark button.action-btn:disabled {
+            background-color: transparent !important;
+            border-color: #2B2B2B !important;
+            color: #6D717F !important;
         }
+
+        /* Global disabled button cursor */
+        button:disabled, input:disabled, textarea:disabled {
+            cursor: not-allowed !important;
+        }
+
+        /* Definitive Disabled Style for Primary Buttons */
+        button[class*="bg-brand-accent"]:disabled {
+            background-color: transparent !important;
+            border-width: 1px !important;
+            border-color: #e5e7eb !important; /* light mode */
+            color: #9ca3af !important; /* light mode */
+        }
+        .dark button[class*="bg-brand-accent"]:disabled {
+            border-color: #2B2B2B !important;
+            color: #6D717F !important;
+        }
+
+        /* Definitive Disabled Style for GenericSelect Dropdown */
+        button.generic-select-button:disabled {
+            background-color: transparent !important;
+            border-color: #e5e7eb !important;
+            color: #9ca3af !important;
+        }
+        .dark button.generic-select-button:disabled {
+            background-color: transparent !important;
+            border-color: #2B2B2B !important;
+            color: #6D717F !important;
+        }
+
+
+        /* Input hover effect for light and dark modes */
+        input:not(:disabled):hover, textarea:not(:disabled):hover, select:not(:disabled):hover {
+            border-color: #9ca3af; /* gray-400 */
+        }
+        .dark input:not(:disabled):hover, .dark textarea:not(:disabled):hover, .dark select:not(:disabled):hover {
+            border-color: #6b7280; /* gray-500 */
+        }
+
+        /* New Centralized Brand Styles */
+        .bg-brand-accent { background-color: var(--color-brand-accent); }
+        .text-on-accent { color: var(--color-brand-text-on-accent); }
+        .hover\:bg-brand-accent-hover:hover:not(:disabled) { background-color: var(--color-brand-accent-hover); }
+        .text-brand-accent { color: var(--color-brand-accent); }
+        .dark .text-brand-accent { text-shadow: none; }
+        .hover\:text-brand-accent-hover:hover { color: var(--color-brand-accent-hover-subtle); }
+        .border-brand-accent { border-color: var(--color-brand-accent); }
+        .ring-brand-accent { --tw-ring-color: var(--color-brand-accent); }
+        .ring-brand-focus { --tw-ring-color: var(--color-brand-focus); }
+        
+        .input-focus-brand:focus {
+            border-color: var(--color-brand-focus);
+            --tw-ring-color: var(--color-brand-focus);
+            box-shadow: 0 0 0 2px var(--tw-ring-color);
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
+        
+        /* New centralized dropdown panel style */
+        .dropdown-panel { background-color: #ffffff; border-color: #d1d5db; /* gray-300 */ }
+        .dark .dropdown-panel { background-color: #000000; border-color: #2B2B2B; }
+
+        /* New centralized modal content background */
+        .modal-content-bg { background-color: #f9fafb; } /* bg-gray-50 */
+        .dark .modal-content-bg { background-color: #171717; }
+
+        /* Definitive fix for refine text area background */
+        .dark .force-bg-black {
+            background-color: #000000 !important;
+        }
+        
+        /* Dark Mode Theme */
+        .dark {
+            background-color: #000000;
+            color: #f3f4f6; /* Default text color */
+        }
+        
+        /* Page Background */
+        .dark .bg-slate-50 {
+            background-color: #000000;
+        }
+
+        /* Cards, Panels, Modals, Menus, and other surfaces */
+        .dark .bg-white,
+        .dark .bg-gray-50,
+        .dark .bg-gray-100,
+        .dark .bg-gray-200, /* Used for some button backgrounds */
+        .dark .bg-gray-700,
+        .dark .bg-gray-800 {
+            background-color: #171717;
+        }
+
+        /* Inputs */
+        .dark input, .dark textarea, .dark select {
+            background-color: #171717;
+            color: #d1d5db; /* gray-300 */
+            border-color: #2B2B2B;
+        }
+        .dark input::placeholder, .dark textarea::placeholder {
+            color: #525252;
+        }
+        
+        /* Inputs and Select Buttons inside containers */
+        .dark .bg-white input,
+        .dark .bg-white textarea,
+        .dark .bg-white select,
+        .dark .bg-gray-800 input,
+        .dark .bg-gray-800 textarea,
+        .dark .bg-gray-800 select,
+        .dark .bg-white button[class*="justify-between"],
+        .dark .bg-gray-800 button[class*="justify-between"] {
+            background-color: #1C1E20;
+        }
+
+        /* Text Colors */
+        .dark .text-gray-900, .dark .text-gray-800 { color: #FFFFFF; }
+        .dark .text-gray-700 { color: #d1d5db; }
+        .dark .text-gray-600 { color: #9ca3af; }
+        .dark .text-gray-500, .dark .text-gray-400 { color: #6D717F; }
+
+        /* Borders */
+        .dark .border-gray-100,
+        .dark .border-gray-200,
+        .dark .border-gray-300,
+        .dark .border-gray-600,
+        .dark .border-gray-700 {
+            border-color: #2B2B2B;
+        }
+
+        /* Hovers */
+        .dark .hover\:bg-gray-50:hover,
+        .dark .hover\:bg-gray-100:hover,
+        .dark .hover\:bg-gray-200:hover,
+        .dark .hover\:bg-gray-700:hover,
+        .dark .hover\:bg-gray-800:hover,
         .dark .action-btn:hover:not(:disabled) {
-            background-color: #374151; /* bg-gray-700 */
+            background-color: #202835;
         }
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+
+        .dark .group[data-hovering="true"] .card-title {
+            color: #91EB23 !important;
         }
+
+        .dark .hover\:text-gray-900:hover {
+            color: #FFFFFF;
+        }
+        
+        /* Shadows */
+        .dark .shadow-lg, .dark .shadow-xl { 
+            box-shadow: 0 10px 15px -3px rgba(5, 12, 38, 0.4), 0 4px 6px -2px rgba(5, 12, 38, 0.2); 
+        }
+
+        /* Error Colors (already dark-themed) */
+        .dark .bg-red-50 { background-color: #450a0a; }
+        .dark .border-red-200 { border-color: #7f1d1d; }
+        .dark .text-red-800 { color: #fca5a5; }
+        .dark .text-red-600 { color: #f87171; }
     </style>
     <script>
         // On page load or when changing themes, best to add inline in `head` to avoid FOUC
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
+        // This logic makes dark mode the default unless 'light' is explicitly stored.
+        if (localStorage.theme === 'light') {
+            document.documentElement.classList.remove('dark');
         } else {
-            document.documentElement.classList.remove('dark')
+            document.documentElement.classList.add('dark');
         }
     </script>
 </head>
-<body class="bg-slate-50 dark:bg-gray-900 transition-colors duration-300">
+<body class="bg-slate-50 dark:bg-[#000000] transition-colors duration-300">
     <div id="root"></div>
     <script type="importmap">
 {
@@ -111,7 +245,8 @@
     "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
   }
 }
 </script>

@@ -1,9 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { AppStep } from '../App';
+import type { ScrapedProductDetails } from '../types';
 
 export type AgentStatusMessage = {
     type: 'thought' | 'action' | 'result' | 'done';
     content: string;
+};
+
+type ProductSelectionModalState = {
+    isOpen: boolean;
+    products: ScrapedProductDetails[];
+    resolve: ((value: ScrapedProductDetails | null) => void) | null;
 };
 
 type UIContextType = {
@@ -24,6 +31,14 @@ type UIContextType = {
     setAgentStatusMessages: React.Dispatch<React.SetStateAction<AgentStatusMessage[]>>;
     generationStatusMessages: string[];
     setGenerationStatusMessages: React.Dispatch<React.SetStateAction<string[]>>;
+    openProductSelectionModal: (products: ScrapedProductDetails[]) => Promise<ScrapedProductDetails | null>;
+    productSelectionModalState: {
+        isOpen: boolean;
+        products: ScrapedProductDetails[];
+    };
+    handleProductSelection: (product: ScrapedProductDetails | null) => void;
+    productAdStep: number;
+    setProductAdStep: React.Dispatch<React.SetStateAction<number>>;
 };
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -35,9 +50,15 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [error, setError] = useState<string | null>(null);
     const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-    const [theme, rawSetTheme] = useState<'light' | 'dark'>('light');
+    const [theme, rawSetTheme] = useState<'light' | 'dark'>('dark');
     const [agentStatusMessages, setAgentStatusMessages] = useState<AgentStatusMessage[]>([]);
     const [generationStatusMessages, setGenerationStatusMessages] = useState<string[]>([]);
+    const [productSelectionModalState, setProductSelectionModalState] = useState<ProductSelectionModalState>({
+        isOpen: false,
+        products: [],
+        resolve: null,
+    });
+    const [productAdStep, setProductAdStep] = useState(1);
 
     const setTheme = useCallback((newTheme: 'light' | 'dark') => {
         rawSetTheme(newTheme);
@@ -51,10 +72,11 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark' || (savedTheme === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            setTheme('dark');
-        } else {
+        // Default to dark unless 'light' is explicitly saved
+        if (savedTheme === 'light') {
             setTheme('light');
+        } else {
+            setTheme('dark');
         }
     }, [setTheme]);
 
@@ -74,6 +96,20 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         });
     }, []);
 
+    const openProductSelectionModal = useCallback((products: ScrapedProductDetails[]) => {
+        return new Promise<ScrapedProductDetails | null>((resolve) => {
+            setProductSelectionModalState({ isOpen: true, products, resolve });
+        });
+    }, []);
+
+    const handleProductSelection = useCallback((product: ScrapedProductDetails | null) => {
+        if (productSelectionModalState.resolve) {
+            productSelectionModalState.resolve(product);
+        }
+        setProductSelectionModalState({ isOpen: false, products: [], resolve: null });
+    }, [productSelectionModalState.resolve]);
+
+
     const value: UIContextType = {
         appStep, navigateTo, goBack,
         isLoading, setIsLoading,
@@ -82,7 +118,14 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         isCancelModalOpen, setIsCancelModalOpen,
         theme, setTheme,
         agentStatusMessages, setAgentStatusMessages,
-        generationStatusMessages, setGenerationStatusMessages
+        generationStatusMessages, setGenerationStatusMessages,
+        openProductSelectionModal,
+        productSelectionModalState: {
+            isOpen: productSelectionModalState.isOpen,
+            products: productSelectionModalState.products,
+        },
+        handleProductSelection,
+        productAdStep, setProductAdStep,
     };
 
     return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

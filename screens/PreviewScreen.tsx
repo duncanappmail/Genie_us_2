@@ -1,83 +1,58 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { Project, UploadedFile } from '../types';
-import { PromptDisplayModal } from '../components/PromptDisplayModal';
-import { PublishingAssistantModal } from '../components/PublishingAssistantModal';
-import { AssetPreview } from '../components/AssetPreview';
-import { SocialCopyEditor } from '../components/SocialCopyEditor';
-import { CREDIT_COSTS } from '../App';
-import { 
-    ArrowDownTrayIcon, LeftArrowIcon, 
-    PencilIcon, RightArrowIcon,
-} from '../components/icons';
-import { useAuth } from '../context/AuthContext';
-import { useUI } from '../context/UIContext';
+import React, { useState } from 'react';
 import { useProjects } from '../context/ProjectContext';
+import { useUI } from '../context/UIContext';
+import { useAuth } from '../context/AuthContext';
+import { AssetPreview } from '../components/AssetPreview';
+import {
+    ArrowDownTrayIcon, LeftArrowIcon, RightArrowIcon, SparklesIcon, VideoIcon
+} from '../components/icons';
+import { SocialCopyEditor } from '../components/SocialCopyEditor';
 import { VideoLightbox } from '../components/VideoLightbox';
+import { ProgressStepper } from '../components/ProgressStepper';
+import { AnimateModal } from '../components/AnimateModal';
+import { CREDIT_COSTS } from '../constants';
+import type { UploadedFile } from '../types';
+import { TEMPLATE_LIBRARY } from '../lib/templates';
 
 export const PreviewScreen: React.FC = () => {
+    const { currentProject, handleRegenerate, isRegenerating, handleAnimate, isAnimating } = useProjects();
+    const { navigateTo, setIsExtendModalOpen, goBack } = useUI();
     const { user } = useAuth();
-    const {
-        navigateTo, error, setError, setIsExtendModalOpen
-    } = useUI();
-    const {
-        currentProject: project,
-        handleRegenerate,
-        handleAnimate,
-        handleRefine,
-        isRegenerating,
-        isAnimating,
-        isRefining,
-    } = useProjects();
-
-    const [imageIndex, setImageIndex] = useState(0);
-    const [videoIndex, setVideoIndex] = useState(0);
-    const [refinePrompt, setRefinePrompt] = useState('');
-    const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
-    const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+    
+    const [activeIndex, setActiveIndex] = useState(0);
     const [lightboxAsset, setLightboxAsset] = useState<UploadedFile | null>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [isAnimateModalOpen, setIsAnimateModalOpen] = useState(false);
 
-    if (!project || !user) {
-        return <div className="text-center p-8">Error: No active project or user.</div>;
+    if (!currentProject) return <div className="p-8 text-center">No project loaded.</div>;
+    
+    const assets = [...currentProject.generatedImages, ...currentProject.generatedVideos];
+    
+    // Handle case where no assets exist (e.g. failed generation)
+    if (assets.length === 0) {
+        return (
+             <div className="max-w-4xl mx-auto p-8 text-center">
+                <h3 className="text-xl font-bold mb-2">No visual asset found</h3>
+                <p className="text-gray-500 mb-6">It seems something went wrong during generation.</p>
+                <button 
+                    onClick={goBack}
+                    className="px-6 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors"
+                >
+                    Back to Generator
+                </button>
+            </div>
+        );
     }
 
-    const plan = user.subscription!.plan;
-
-    useEffect(() => {
-        if(project.generatedImages.length > 0) setImageIndex(project.generatedImages.length -1);
-    }, [project.generatedImages.length]);
-     useEffect(() => {
-        if(project.generatedVideos.length > 0) setVideoIndex(project.generatedVideos.length -1);
-    }, [project.generatedVideos.length]);
-     useEffect(() => {
-        if(error) {
-            const timer = setTimeout(() => setError(null), 5000);
-            return () => clearTimeout(timer);
-        }
-     }, [error, setError]);
-
-    const downloadAsset = (asset: any) => {
+    const activeAsset = assets[activeIndex] || assets[0];
+    const isVideo = activeAsset.mimeType.startsWith('video/');
+    
+    const handleDownload = () => {
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(asset.blob);
-        link.download = asset.name;
+        link.href = URL.createObjectURL(activeAsset.blob);
+        link.download = activeAsset.name;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-    };
-    
-    const handleRefineSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        handleRefine(imageIndex, refinePrompt);
-        setRefinePrompt('');
-    };
-
-    const handleRefineInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setRefinePrompt(e.target.value);
-        if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-        }
     };
 
     const handlePreviewClick = (asset: UploadedFile) => {
@@ -86,142 +61,169 @@ export const PreviewScreen: React.FC = () => {
         }
     };
     
-    const renderNav = (index: number, setIndex: React.Dispatch<React.SetStateAction<number>>, total: number) => (
-        <div className="flex items-center justify-center gap-4 mt-4">
-            <button onClick={() => setIndex(prev => Math.max(0, prev - 1))} disabled={index === 0} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50">
-                <LeftArrowIcon className="w-6 h-6" />
-            </button>
-            <span className="font-mono text-sm">{index + 1} / {total}</span>
-            <button onClick={() => setIndex(prev => Math.min(total - 1, prev + 1))} disabled={index === total - 1} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50">
-                <RightArrowIcon className="w-6 h-6" />
-            </button>
-        </div>
-    );
+    const handleNext = () => setActiveIndex(prev => Math.min(assets.length - 1, prev + 1));
+    const handlePrev = () => setActiveIndex(prev => Math.max(0, prev - 1));
 
-    const currentImage = project.generatedImages[imageIndex];
-    const currentVideo = project.generatedVideos[videoIndex];
-    const assetToPublish = currentVideo || currentImage;
-    const credits = user.credits?.current ?? 0;
+    const plan = user?.subscription?.plan;
+    const credits = user?.credits?.current || 0;
+    const canExtend = isVideo && plan === 'Pro';
+    const canAnimate = !isVideo && plan === 'Pro' && credits >= CREDIT_COSTS.base.animate;
 
-    const renderVisualSection = (asset: any, isImage: boolean) => (
-        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col border">
-            <div className="flex justify-between items-center mb-4">
-                <button onClick={() => navigateTo(project.mode === 'Create a UGC Video' ? 'UGC_GENERATE' : 'GENERATE')} className="flex items-center gap-1 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
-                    <LeftArrowIcon className="w-4 h-4" />
-                    Back
-                </button>
-                <button onClick={() => setIsPromptModalOpen(true)} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                    Show Prompt
-                </button>
-            </div>
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center aspect-square group">
-                <AssetPreview asset={asset} onClick={handlePreviewClick} />
-            </div>
-            {isImage ? (
-                project.generatedImages.length > 1 && renderNav(imageIndex, setImageIndex, project.generatedImages.length)
-            ) : (
-                project.generatedVideos.length > 1 && renderNav(videoIndex, setVideoIndex, project.generatedVideos.length)
-            )}
-            
-            {isImage && (
-                <div className="mt-4 flex-grow">
-                     <form onSubmit={handleRefineSubmit} className="relative">
-                        <textarea
-                            ref={textareaRef}
-                            rows={2}
-                            value={refinePrompt}
-                            onChange={handleRefineInputChange}
-                            placeholder="Want changes? Please describe"
-                            className="w-full p-3 pr-44 border rounded-lg resize-none overflow-hidden transition-all focus:ring-2 focus:ring-blue-500 dark:border-gray-600 min-h-[4.5rem] hover:border-blue-400 dark:hover:border-blue-500"
-                            disabled={credits < CREDIT_COSTS.refine}
-                        />
-                        <button
-                            type="submit"
-                            disabled={isRefining || !refinePrompt || credits < CREDIT_COSTS.refine}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 transition-colors text-sm"
-                            aria-label="Generate changes"
-                        >
-                            {isRefining ? (
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                `Generate (${CREDIT_COSTS.refine} credit)`
-                            )}
-                        </button>
-                    </form>
-                </div>
-            )}
-            
-             <div className="mt-6 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => handleRegenerate(isImage ? 'image' : 'video')} disabled={isRegenerating === (isImage ? 'image' : 'video')} className="action-btn">
-                        {(isRegenerating === 'image' && isImage) || (isRegenerating === 'video' && !isImage)
-                            ? <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                            : 'Regenerate'
-                        }
-                    </button>
-                    {isImage ? (
-                        <button onClick={() => handleAnimate(imageIndex)} disabled={isAnimating === imageIndex || plan !== 'Pro' || credits < CREDIT_COSTS.animate} className="action-btn">
-                            {isAnimating === imageIndex
-                                ? <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                                : `Animate${plan !== 'Pro' ? ' (Pro)' : ''}`
-                            }
-                        </button>
-                    ) : (
-                         <button onClick={() => setIsExtendModalOpen(true)} disabled={plan !== 'Pro' || credits < CREDIT_COSTS.videoExtend} className="action-btn">
-                             Extend {plan !== 'Pro' ? '(Pro)' : `(${CREDIT_COSTS.videoExtend} Cr)`}
-                        </button>
-                    )}
-                </div>
-                 <div className="grid grid-cols-1 gap-3">
-                    <button onClick={() => downloadAsset(asset)} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                        <ArrowDownTrayIcon className="w-5 h-5" />
-                        Download
-                    </button>
-                    {!project.publishingPackage && (
-                         <button onClick={() => setIsPublishModalOpen(true)} className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-gray-600 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                            <PencilIcon className="w-5 h-5" />
-                            Generate Copy For Your Socials
-                        </button>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+    const isTemplateFlow = !!currentProject.templateId;
+    const isProductAd = currentProject.mode === 'Product Ad';
+    
+    const activeTemplate = currentProject.templateId 
+        ? TEMPLATE_LIBRARY.find(t => t.id === currentProject.templateId)
+        : null;
+
+    const onAnimateClick = () => {
+        setIsAnimateModalOpen(true);
+    };
+
+    const onAnimateConfirm = (prompt: string) => {
+        handleAnimate(activeIndex, prompt);
+        setIsAnimateModalOpen(false);
+    };
 
     return (
-        <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8 relative">
-                <h2 className="text-3xl font-bold">Ta-da! As You Wished.</h2>
+        <div className="max-w-7xl mx-auto pb-32">
+            <div className="flex justify-between items-center mb-6">
+                 {isProductAd ? (
+                     // Product Ad & Template Flow Header
+                    <>
+                        <div className="flex items-center gap-4">
+                             <button onClick={goBack} className="flex items-center gap-1 text-sm font-semibold text-brand-accent hover:text-brand-accent-hover">
+                                <LeftArrowIcon className="w-4 h-4"/> Back
+                            </button>
+                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Ta-da! As You Wished.</h2>
+                        </div>
+                        <ProgressStepper steps={isTemplateFlow ? ['Add Product', 'Results'] : ['Add Product', 'Select Style', 'Create', 'Results']} currentStepIndex={isTemplateFlow ? 1 : 3} />
+                    </>
+                 ) : (
+                     // Default Header for other modes
+                    <div className="w-full flex justify-between items-center">
+                        <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-brand-accent hover:text-brand-accent-hover">
+                            <LeftArrowIcon className="w-4 h-4"/> Back
+                        </button>
+                        <h2 className="text-3xl font-bold text-center">Ta-da! As You Wished.</h2>
+                        <div className="w-24"></div> {/* Spacer to balance the back button */}
+                    </div>
+                 )}
+            </div>
+
+            <div className={`grid grid-cols-1 ${currentProject.publishingPackage ? 'lg:grid-cols-5' : 'lg:grid-cols-1 max-w-4xl mx-auto'} gap-8`}>
+                {/* Main Preview Area */}
+                <div className={`${currentProject.publishingPackage ? 'lg:col-span-3' : ''} flex flex-col gap-4`}>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700 w-full">
+                         {/* Card Header with Animate Button for Images */}
+                         {!isVideo && (
+                            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-end">
+                                <button 
+                                    onClick={onAnimateClick}
+                                    disabled={isAnimating === activeIndex || !canAnimate}
+                                    className="flex items-center gap-1 text-sm font-semibold text-brand-accent hover:text-brand-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    title={plan !== 'Pro' ? "Available on Pro Plan" : credits < CREDIT_COSTS.base.animate ? "Not enough credits" : ""}
+                                >
+                                    {isAnimating === activeIndex ? (
+                                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <VideoIcon className="w-4 h-4" />
+                                    )}
+                                    Animate
+                                </button>
+                            </div>
+                        )}
+                        
+                        <div className="flex-grow bg-gray-100 dark:bg-gray-900 relative flex items-center justify-center p-6 min-h-[300px] sm:min-h-[400px]">
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                <AssetPreview asset={activeAsset} objectFit="contain" onClick={handlePreviewClick} />
+                            </div>
+                            {assets.length > 1 && (
+                                <>
+                                    <button 
+                                        onClick={handlePrev} 
+                                        disabled={activeIndex === 0}
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 disabled:opacity-30 transition-all"
+                                    >
+                                        <LeftArrowIcon className="w-6 h-6" />
+                                    </button>
+                                    <button 
+                                        onClick={handleNext} 
+                                        disabled={activeIndex === assets.length - 1}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 disabled:opacity-30 transition-all"
+                                    >
+                                        <RightArrowIcon className="w-6 h-6" />
+                                    </button>
+                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                                        {activeIndex + 1} / {assets.length}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        
+                        {/* Thumbnails */}
+                        {assets.length > 1 && (
+                            <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                                <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+                                    {assets.map((asset, idx) => (
+                                        <div 
+                                            key={asset.id} 
+                                            onClick={() => setActiveIndex(idx)}
+                                            className={`w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${idx === activeIndex ? 'border-brand-accent' : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                        >
+                                            <AssetPreview asset={asset} objectFit="cover" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Actions Row */}
+                    <div className={`grid gap-4 ${isVideo ? 'grid-cols-3' : 'grid-cols-2'} flex-shrink-0`}>
+                         <button 
+                            onClick={() => handleRegenerate(isVideo ? 'video' : 'image')} 
+                            disabled={isRegenerating !== null}
+                            className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 bg-white dark:bg-gray-800"
+                        >
+                            {isRegenerating ? <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div> : <><SparklesIcon className="w-5 h-5" /> Regenerate</>}
+                        </button>
+
+                        {isVideo && (
+                            <button 
+                                onClick={() => setIsExtendModalOpen(true)}
+                                disabled={!canExtend}
+                                className="flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 bg-white dark:bg-gray-800"
+                                title={!canExtend ? "Available on Pro Plan" : ""}
+                            >
+                                <VideoIcon className="w-5 h-5" /> Extend
+                            </button>
+                        )}
+                        
+                         <button onClick={handleDownload} className="flex items-center justify-center gap-2 py-3 px-4 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors">
+                            <ArrowDownTrayIcon className="w-5 h-5" /> Download
+                        </button>
+                    </div>
+                </div>
+
+                {/* Right Sidebar: Social Copy */}
+                {currentProject.publishingPackage && (
+                    <div className="lg:col-span-2">
+                        <SocialCopyEditor project={currentProject} />
+                    </div>
+                )}
             </div>
             
-            {error && <div className="mb-4 p-4 bg-red-50 text-red-800 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-300 dark:border-red-500/30">{error}</div>}
-
-            {project.publishingPackage ? (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                    <div className="lg:col-span-3">
-                        {currentImage ? renderVisualSection(currentImage, true) : renderVisualSection(currentVideo, false)}
-                    </div>
-                    <div className="lg:col-span-2">
-                        <SocialCopyEditor project={project} />
-                    </div>
-                </div>
-            ) : (
-                <div className="max-w-2xl mx-auto">
-                    {currentImage ? renderVisualSection(currentImage, true) : renderVisualSection(currentVideo, false)}
-                </div>
-            )}
-            
-            <PromptDisplayModal isOpen={isPromptModalOpen} onClose={() => setIsPromptModalOpen(false)} prompt={project.prompt} />
-            <PublishingAssistantModal 
-                isOpen={isPublishModalOpen}
-                onClose={() => setIsPublishModalOpen(false)}
-                asset={assetToPublish}
-                project={project}
-            />
             <VideoLightbox
                 isOpen={!!lightboxAsset}
                 onClose={() => setLightboxAsset(null)}
                 asset={lightboxAsset}
+            />
+            <AnimateModal
+                isOpen={isAnimateModalOpen}
+                onClose={() => setIsAnimateModalOpen(false)}
+                onConfirm={onAnimateConfirm}
+                defaultPrompt={activeTemplate?.animationPrompt}
             />
         </div>
     );

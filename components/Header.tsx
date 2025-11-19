@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
 import { 
-    CoinIcon, SunIcon, MoonIcon, ArrowRightOnRectangleIcon, UserCircleIcon, 
+    SparklesIcon, SunIcon, MoonIcon, ArrowRightOnRectangleIcon, UserCircleIcon, 
     HomeIcon, CreditCardIcon, Squares2X2Icon, MagnifyingGlassIcon, Bars3Icon, XMarkIcon,
     DNAIcon
 } from './icons';
@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
 
 
     return (
-        <header className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900">
+        <header className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-slate-50">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white cursor-pointer" onClick={onHome}>GenieUs</h1>
             {!isInitialPlanSelection && (
                 <>
@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
                         {credits && (
                             <div className="relative group flex items-center">
                                 <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <CoinIcon className="w-5 h-5 text-yellow-500"/>
+                                    <SparklesIcon className="w-5 h-5 text-brand-accent"/>
                                     <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{credits.current}</span>
                                 </div>
                                 <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-40">
@@ -129,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
                     <div className="md:hidden flex items-center gap-2">
                         {credits && (
                             <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <CoinIcon className="w-5 h-5 text-yellow-500"/>
+                                <SparklesIcon className="w-5 h-5 text-brand-accent"/>
                                 <span className="font-semibold text-sm">{credits.current}</span>
                             </div>
                         )}

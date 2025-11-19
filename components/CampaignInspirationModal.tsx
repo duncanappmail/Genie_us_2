@@ -1,22 +1,27 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { generateCampaignInspiration, elaborateArtDirection } from '../services/geminiService';
-import type { Project, CampaignInspiration, CampaignBrief } from '../types';
-import { ArrowPathIcon, LightbulbIcon } from './icons';
+import { generateCampaignInspiration, elaborateArtDirection, generateUGCScripts, generateSocialProofIdeas } from '../services/geminiService';
+import type { Project, CampaignInspiration, UGCScriptIdea, SocialProofIdea } from '../types';
+import { ModalWrapper } from './ModalWrapper';
+
+type CreativeIdea = CampaignInspiration | UGCScriptIdea | SocialProofIdea;
 
 interface CampaignInspirationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (prompt: string) => void;
+  onSelect: (value: string, type: 'artDirection' | 'script' | 'review') => void;
   project: Project;
 }
 
 export const CampaignInspirationModal: React.FC<CampaignInspirationModalProps> = ({ isOpen, onClose, onSelect, project }) => {
-  const [campaigns, setCampaigns] = useState<CampaignInspiration[]>([]);
+  const [ideas, setIdeas] = useState<CreativeIdea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isElaborating, setIsElaborating] = useState<number | null>(null);
+  
+  const adStyle = project.adStyle || 'Creative Placement';
 
-  const fetchCampaigns = useCallback(async () => {
+  const fetchIdeas = useCallback(async () => {
     if (!project.campaignBrief) {
         setError("Please upload a product image first to generate a campaign brief.");
         setIsLoading(false);
@@ -25,117 +30,143 @@ export const CampaignInspirationModal: React.FC<CampaignInspirationModalProps> =
     setIsLoading(true);
     setError(null);
     try {
-      const suggestions = await generateCampaignInspiration(project.campaignBrief);
-      setCampaigns(suggestions);
+      let suggestions: CreativeIdea[];
+      if (adStyle === 'UGC') {
+        suggestions = await generateUGCScripts(project.campaignBrief);
+      } else if (adStyle === 'Social Proof') {
+        suggestions = await generateSocialProofIdeas(project.campaignBrief);
+      } else {
+        suggestions = await generateCampaignInspiration(project.campaignBrief, project.highLevelGoal);
+      }
+      setIdeas(suggestions);
     } catch (e) {
       setError('Could not fetch campaign ideas. Please try again.');
       console.error(e);
     } finally {
       setIsLoading(false);
     }
-  }, [project.campaignBrief]);
+  }, [project.campaignBrief, project.highLevelGoal, adStyle]);
 
 
   useEffect(() => {
     if (isOpen) {
-      fetchCampaigns();
+      fetchIdeas();
     }
-  }, [isOpen, fetchCampaigns]);
+  }, [isOpen, fetchIdeas]);
   
   const handleUseDirection = async (campaign: CampaignInspiration, index: number) => {
       if (!project.campaignBrief) return;
       setIsElaborating(index);
       try {
           const detailedPrompt = await elaborateArtDirection(campaign.artDirection, project.campaignBrief);
-          onSelect(detailedPrompt);
+          onSelect(detailedPrompt, 'artDirection');
           onClose();
       } catch (e: any) {
           setError(e.message || "Could not elaborate on the art direction. Please try again.");
-          console.error("Failed to elaborate art direction", e);
       } finally {
           setIsElaborating(null);
       }
   };
+  
+  const handleSelect = (value: string, type: 'artDirection' | 'script' | 'review') => {
+      onSelect(value, type);
+      onClose();
+  };
 
-  if (!isOpen) return null;
+  const renderIdeaCard = (idea: CreativeIdea, index: number) => {
+    if ('artDirection' in idea) { // CampaignInspiration
+      return (
+        <div className="p-4 border border-gray-200 rounded-lg modal-content-bg dark:border-gray-600">
+          <h4 className="font-bold text-lg text-brand-accent">{idea.hook}</h4>
+          <div className="mt-3 space-y-3 text-sm">
+            <div><p className="font-semibold text-gray-800 dark:text-gray-200">Strategy:</p><p className="text-gray-600 dark:text-gray-300">{idea.strategy}</p></div>
+            <div><p className="font-semibold text-gray-800 dark:text-gray-200">Concept:</p><p className="text-gray-600 dark:text-gray-300">{idea.concept}</p></div>
+            <div><p className="font-semibold text-gray-800 dark:text-gray-200">Art Direction:</p><p className="text-gray-600 dark:text-gray-300">{idea.artDirection}</p></div>
+          </div>
+          <div className="mt-4 text-right">
+            <button 
+                onClick={() => handleUseDirection(idea, index)} 
+                disabled={isElaborating !== null} 
+                className="w-full sm:w-auto px-6 py-2.5 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            >
+              {isElaborating === index ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span>Generating...</span>
+                  </>
+              ) : 'Use this art direction'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+    if ('script' in idea) { // UGCScriptIdea
+      return (
+        <div className="p-4 border border-gray-200 rounded-lg modal-content-bg dark:border-gray-600">
+          <h4 className="font-bold text-lg text-brand-accent">{idea.hook}</h4>
+          <div className="mt-3 space-y-3 text-sm"><p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{idea.script}</p></div>
+          <div className="mt-4 text-right">
+              <button 
+                onClick={() => handleSelect(idea.script, 'script')} 
+                className="w-full sm:w-auto px-6 py-2.5 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors text-sm"
+              >
+                  Use this script
+              </button>
+          </div>
+        </div>
+      );
+    }
+    if ('review' in idea) { // SocialProofIdea
+      return (
+        <div className="p-4 border border-gray-200 rounded-lg modal-content-bg dark:border-gray-600">
+          <h4 className="font-bold text-lg text-brand-accent">{idea.hook}</h4>
+          <div className="mt-3 space-y-3 text-sm"><p className="text-gray-600 dark:text-gray-300">"{idea.review}"</p></div>
+          <div className="mt-4 text-right">
+              <button 
+                onClick={() => handleSelect(idea.review, 'review')} 
+                className="w-full sm:w-auto px-6 py-2.5 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors text-sm"
+              >
+                  Use this review
+              </button>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+  
+  const getTitle = () => {
+      switch(adStyle) {
+          case 'UGC': return 'UGC Script Ideas';
+          case 'Social Proof': return 'Social Proof Ideas';
+          default: return 'Campaign Inspiration';
+      }
+  }
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3">
-            <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded-full">
-                <LightbulbIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Campaign Inspiration</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">AI-generated campaign concepts to kickstart your marketing.</p>
-            </div>
-        </div>
-        
-        <div className="mt-4 max-h-[60vh] min-h-[24rem] overflow-y-auto pr-2">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-full text-red-500">
-              {error}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {campaigns.map((campaign, index) => (
-                <div key={index} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                    <h4 className="font-bold text-lg text-blue-600 dark:text-blue-400">"{campaign.hook}"</h4>
-                    <div className="mt-3 space-y-3 text-sm">
-                        <div>
-                            <p className="font-semibold text-gray-800 dark:text-gray-200">Strategy:</p>
-                            <p className="text-gray-600 dark:text-gray-300">{campaign.strategy}</p>
-                        </div>
-                        <div>
-                            <p className="font-semibold text-gray-800 dark:text-gray-200">Concept:</p>
-                            <p className="text-gray-600 dark:text-gray-300">{campaign.concept}</p>
-                        </div>
-                         <div>
-                            <p className="font-semibold text-gray-800 dark:text-gray-200">Art Direction:</p>
-                            <p className="text-gray-600 dark:text-gray-300">{campaign.artDirection}</p>
-                        </div>
-                    </div>
-                    <div className="mt-4 text-right">
-                         <button
-                            onClick={() => handleUseDirection(campaign, index)}
-                            disabled={isElaborating !== null}
-                            className="px-3 py-1.5 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 text-xs w-40 h-7 flex items-center justify-center disabled:bg-blue-400"
-                         >
-                            {isElaborating === index ? (
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                'Use this art direction'
-                            )}
-                         </button>
-                    </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+    <ModalWrapper isOpen={isOpen} onClose={onClose}>
+        <div className="bg-white dark:bg-black rounded-2xl shadow-xl w-full max-w-2xl flex flex-col">
+          <div className="p-6 flex-shrink-0">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{getTitle()}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Your Genie has generated some concepts for you.</p>
+          </div>
+          
+          <div className="px-6 flex-1">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div></div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-64 text-red-500">{error}</div>
+            ) : (
+              <div className="space-y-4">{ideas.map((idea, index) => <div key={index}>{renderIdeaCard(idea, index)}</div>)}</div>
+            )}
+          </div>
 
-        <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
-            <button
-                onClick={onClose}
-                className="w-full sm:flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 flex items-center justify-center"
-            >
-                Close
-            </button>
-            <button
-                onClick={fetchCampaigns}
-                disabled={isLoading}
-                className="w-full sm:flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-                <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-            </button>
+          <div className="p-6 mt-4 flex flex-col sm:flex-row-reverse gap-3 flex-shrink-0">
+              <button onClick={onClose} className="w-full sm:flex-1 p-4 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover flex items-center justify-center">Close</button>
+              <button onClick={fetchIdeas} disabled={isLoading} className="action-btn w-full sm:flex-1">Refresh</button>
+          </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
   );
 };
+    

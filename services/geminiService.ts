@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type, VideoGenerationReferenceImage, VideoGenerationReferenceType, GenerateContentResponse, Modality } from "@google/genai";
-import type { UploadedFile, CampaignBrief, CampaignInspiration, AdCopy, ScrapedProductDetails, PublishingPackage, PlatformPublishingContent, Project, BrandProfile } from '../types';
+import type { UploadedFile, CampaignBrief, CampaignInspiration, AdCopy, ScrapedProductDetails, PublishingPackage, PlatformPublishingContent, Project, BrandProfile, UGCScriptIdea, SocialProofIdea } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -36,15 +37,15 @@ const fileToUploadedFile = async (file: File | Blob, name: string): Promise<Uplo
     });
 };
 
-export const generatePromptSuggestions = async (mode: string, productInfo?: { productName: string, productDescription: string }): Promise<string[]> => {
+export const generatePromptSuggestions = async (mode: string, productInfo?: { productName: string, productDescription: string }): Promise<{ title: string; prompt: string; }[]> => {
     let prompt: string;
 
     if (mode === 'Product Ad' && productInfo?.productName) {
-        prompt = `Generate 3 diverse and creative image generation prompts for our AI image generator. The prompts should be suitable for creating an advertisement for this product: "${productInfo.productName}". Description: "${productInfo.productDescription}". The prompts should be concise, visually descriptive, and under 200 characters each. Return them as a JSON array of strings.`;
+        prompt = `Generate 3 diverse and creative image generation concepts for our AI image generator. The concepts should be suitable for creating an advertisement for this product: "${productInfo.productName}". Description: "${productInfo.productDescription}". For each concept, provide a short, catchy "title" and a detailed "prompt" for the image generator. The prompt should be visually descriptive and under 200 characters. Return them as a JSON array of objects, where each object has "title" and "prompt" keys.`;
     } else if (mode === 'Video Maker') {
-        prompt = `Generate 3 diverse and creative video generation prompts. The prompts should describe trendy, cool, or potentially viral video concepts. Focus on dynamic scenes, interesting camera movements, and engaging subjects. They should be concise, visually descriptive, and under 200 characters each. Return them as a JSON array of strings.`;
+        prompt = `Generate 3 diverse and creative video generation concepts. The concepts should describe trendy, cool, or potentially viral video ideas. For each concept, provide a short, catchy "title" and a detailed "prompt" for the video generator. The prompt should be visually descriptive and under 200 characters. Return them as a JSON array of objects, where each object has "title" and "prompt" keys.`;
     } else { // Default to Art Maker
-        prompt = `Generate 3 diverse and creative image generation prompts for our AI image generator. The prompts should be for creating artistic scenes or abstract concepts. They should be concise, visually descriptive, and under 200 characters each. Return them as a JSON array of strings.`;
+        prompt = `Generate 3 diverse and creative image generation concepts for our AI image generator. The concepts should be for creating artistic scenes or abstract concepts. For each concept, provide a short, catchy "title" and a detailed "prompt" for the image generator. The prompt should be visually descriptive and under 200 characters. Return them as a JSON array of objects, where each object has "title" and "prompt" keys.`;
     }
 
     const response = await ai.models.generateContent({
@@ -54,7 +55,14 @@ export const generatePromptSuggestions = async (mode: string, productInfo?: { pr
             responseMimeType: "application/json",
             responseSchema: {
                 type: Type.ARRAY,
-                items: { type: Type.STRING }
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        title: { type: Type.STRING },
+                        prompt: { type: Type.STRING }
+                    },
+                    required: ["title", "prompt"]
+                }
             }
         }
     });
@@ -160,6 +168,70 @@ export const elaborateArtDirection = async (artDirection: string, brief: Campaig
     return response.text;
 };
 
+export const generateUGCScripts = async (brief: CampaignBrief): Promise<UGCScriptIdea[]> => {
+    const prompt = `You are an expert UGC (User-Generated Content) scriptwriter. Your task is to generate 3 distinct and engaging UGC script ideas for a social media video based on a product brief.\nFor each concept, you must provide a short, catchy "hook" and a "script" that feels authentic and conversational.\n\nHere is the campaign brief:\n
+    Product Name: ${brief.productName}
+    Description: ${brief.productDescription}
+    Target Audience: ${brief.targetAudience}
+    Key Selling Points: ${brief.keySellingPoints.join(', ')}
+    Brand Vibe: ${brief.brandVibe}\n\n
+    Generate the 3 script ideas now. The script should be written as if a real person is speaking to their camera.
+    `;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        hook: { type: Type.STRING },
+                        script: { type: Type.STRING }
+                    },
+                    required: ["hook", "script"]
+                }
+            }
+        }
+    });
+
+    return JSON.parse(response.text);
+};
+
+export const generateSocialProofIdeas = async (brief: CampaignBrief): Promise<SocialProofIdea[]> => {
+    const prompt = `You are an expert social media marketer specializing in social proof. Your task is to generate 3 distinct ad concepts based on a product brief that leverage testimonials or reviews.\nFor each concept, provide a "hook" and a short, impactful "review" that feels genuine and highlights a key benefit.\n\nHere is the campaign brief:\n
+    Product Name: ${brief.productName}
+    Description: ${brief.productDescription}
+    Target Audience: ${brief.targetAudience}
+    Key Selling Points: ${brief.keySellingPoints.join(', ')}
+    Brand Vibe: ${brief.brandVibe}\n\n
+    Generate the 3 social proof ideas now. The review should be concise and compelling.
+    `;
+    
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        hook: { type: Type.STRING },
+                        review: { type: Type.STRING }
+                    },
+                    required: ["hook", "review"]
+                }
+            }
+        }
+    });
+
+    return JSON.parse(response.text);
+};
+
 export const generatePublishingPackage = async (brief: CampaignBrief, prompt: string, highLevelGoal?: string): Promise<PublishingPackage> => {
     const fullPrompt = `Generate a social media publishing package for a new ad visual.
     
@@ -229,9 +301,36 @@ export const generatePublishingPackage = async (brief: CampaignBrief, prompt: st
 }
 
 export const scrapeProductDetailsFromUrl = async (url: string): Promise<ScrapedProductDetails[]> => {
+    const prompt = `Your task is to act as an expert web scraper and marketing copywriter. You will be given a URL. You MUST use your search tool to access this URL and extract information about the products on the page.
+
+URL to analyze: ${url}
+
+**Extraction Rules:**
+1.  **Product Name:** Prioritize the content of the main \`<h1>\` HTML tag.
+2.  **Product Description:** Analyze the page content. Your goal is to create a compelling, summarized description suitable for an ad campaign. Prioritize the \`<meta name="description">\` tag, but if it's too long, generic, or uninspired, you MUST summarize the key features and benefits from the page into a concise and engaging paragraph (2-3 sentences max).
+3.  **Image URL:** Prioritize the content of the \`<meta property="og:image">\` tag. The URL must be absolute.
+4.  Identify all distinct products on the page.
+
+**Crucial Output Rules:**
+- Your entire response MUST be a single, valid JSON array of objects.
+- Each object must contain "productName", "productDescription", and "imageUrl".
+- Do NOT include any text, explanation, or markdown formatting (like \`\`\`json) before or after the JSON array.
+- If the URL is inaccessible, or if no products are found, you MUST return an empty JSON array: [].
+
+**Example:**
+If you analyze a page and find one product, your response should be EXACTLY:
+[
+  {
+    "productName": "Example Sneaker",
+    "productDescription": "A comfortable and stylish sneaker for everyday wear.",
+    "imageUrl": "https://example.com/images/sneaker.jpg"
+  }
+]
+`;
+
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: `Using your search tool, find the product name, a concise product description, and the direct URL to the main product image for all products listed at the URL: ${url}. Respond ONLY with a raw JSON array of objects, where each object has "productName", "productDescription", and "imageUrl" keys. Do not include any introductory text, markdown formatting, or apologies.`,
+        model: 'gemini-2.5-pro',
+        contents: prompt,
         config: {
             tools: [{ googleSearch: {} }],
         }
@@ -239,15 +338,25 @@ export const scrapeProductDetailsFromUrl = async (url: string): Promise<ScrapedP
     
     try {
         let text = response.text.trim();
-        const jsonMatch = text.match(/```(?:json)?\n([\s\S]*?)\n```/);
-        if (jsonMatch) {
+        
+        if (!text) {
+            console.warn("Gemini API returned an empty or undefined text response for scrapeProductDetailsFromUrl.");
+            return [];
+        }
+        
+        // If response is wrapped in markdown, extract the JSON part.
+        const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (jsonMatch && jsonMatch[1]) {
             text = jsonMatch[1];
         }
+
+        // The response should be a JSON array. Parse it.
         return JSON.parse(text);
+
     } catch (e) {
         console.error("Gemini API did not return valid JSON for scrapeProductDetailsFromUrl:", e);
         console.error("Response text was:", response.text);
-        // The calling code handles an empty array as "no products found".
+        // An empty array signals to the caller that no products were found.
         return [];
     }
 };
@@ -386,8 +495,8 @@ export const extractBrandProfileFromUrl = async (url: string): Promise<Omit<Bran
 
     try {
         let text = response.text.trim();
-        const jsonMatch = text.match(/```(?:json)?\n([\s\S]*?)\n```/);
-        if (jsonMatch) {
+        const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (jsonMatch && jsonMatch[1]) {
             text = jsonMatch[1];
         }
         return JSON.parse(text);
@@ -398,7 +507,7 @@ export const extractBrandProfileFromUrl = async (url: string): Promise<Omit<Bran
     }
 };
 
-const fetchWithProxies = async (url: string): Promise<Response> => {
+export const fetchWithProxies = async (url: string): Promise<Response> => {
     // 1. Try a direct fetch first
     try {
         const controller = new AbortController();
@@ -455,7 +564,7 @@ const fetchWithProxies = async (url: string): Promise<Response> => {
     }
 
     // 3. If all attempts fail, throw a clear error.
-    throw new Error('Failed to fetch the logo through all available proxies.');
+    throw new Error('Failed to fetch the resource through all available proxies.');
 };
 
 
@@ -562,12 +671,13 @@ export const generateUGCVideo = async (project: Project): Promise<UploadedFile> 
     }
 
     // --- Make the API call ---
-    // When a product image is included, there are multiple reference images (avatar + product).
-    // This requires the 'veo-3.1-generate-preview' model for best results.
     const hasMultipleReferences = !!project.ugcProductFile;
-    const model = hasMultipleReferences || project.useCinematicQuality
-        ? 'veo-3.1-generate-preview'
-        : 'veo-3.1-fast-generate-preview';
+    let model = project.videoModel || 'veo-3.1-fast-generate-preview';
+
+    // Override: Multiple references require the 'generate-preview' model for best results.
+    if (hasMultipleReferences && model !== 'veo-3.1-generate-preview') {
+        model = 'veo-3.1-generate-preview';
+    }
         
     let operation = await ai.models.generateVideos({
         model: model,
@@ -605,4 +715,48 @@ export const generateUGCVideo = async (project: Project): Promise<UploadedFile> 
         mimeType: 'video/mp4',
         name: 'ugc_video.mp4',
     };
+};
+
+export const validateAvatarImage = async (image: UploadedFile): Promise<boolean> => {
+    if (!image.base64) return false;
+    const prompt = "Does this image contain a clear, front-facing photo of a single person? The person should be the main subject, and there should be no other people visible. Respond with only 'yes' or 'no'.";
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [fileToGenerativePart(image), { text: prompt }] },
+        });
+        const textResponse = response.text.trim().toLowerCase();
+        return textResponse.includes('yes');
+    } catch (e) {
+        console.error("Avatar validation failed:", e);
+        return false; // Fail safely
+    }
+};
+
+export const generateScriptFromTemplate = async (sceneDescription: string, productInfo?: { productName: string, productDescription: string }): Promise<string> => {
+    let prompt = `You are an expert UGC scriptwriter. Generate a short, engaging, and natural script for a video content creator.\n\nScene: ${sceneDescription}\n`;
+    
+    if (productInfo?.productName) {
+        prompt += `Product: ${productInfo.productName}\nDescription: ${productInfo.productDescription}\n\nThe script should authentically recommend and showcase this product in the given scene. Keep it under 45 seconds spoken.`;
+    } else {
+        prompt += `The creator is just talking to their audience, sharing a relatable thought or story relevant to this setting. Keep it under 30 seconds spoken.`;
+    }
+    
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+    });
+    
+    return response.text.trim();
+};
+
+export const suggestAvatarFromContext = async (sceneDescription: string, productInfo?: { productName: string, productDescription: string }): Promise<string> => {
+     const prompt = `Suggest a visual description for an AI avatar character that would fit perfectly in this scene and (optionally) promoting this product.\n\nScene: ${sceneDescription}\n${productInfo ? `Product: ${productInfo.productName}` : ''}\n\nRespond with a single, concise paragraph describing the person's appearance, age, clothing, and vibe.`;
+     
+     const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+    });
+    
+    return response.text.trim();
 };

@@ -48,7 +48,7 @@ export const SubscriptionScreen: React.FC = () => {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 hover:text-blue-600"><LeftArrowIcon className="w-4 h-4"/> Back</button>
+            <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 text-brand-accent hover:text-brand-accent-hover-subtle"><LeftArrowIcon className="w-4 h-4"/> Back</button>
             <h2 className="text-3xl font-bold">Subscription & Billing</h2>
 
             {isCanceled && (
@@ -60,9 +60,9 @@ export const SubscriptionScreen: React.FC = () => {
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
                     {/* Current Plan */}
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                         <h3 className="text-xl font-bold">My Plan</h3>
-                        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg flex justify-between items-center">
+                        <div className="mt-4 p-4 bg-gray-100 dark:bg-[#1C1E20] rounded-lg flex justify-between items-center">
                             <div>
                                 <span className="text-lg font-bold">{user.subscription?.plan}</span>
                                 <span className="text-sm text-gray-500"> - Billed {user.subscription?.billingCycle}</span>
@@ -73,7 +73,7 @@ export const SubscriptionScreen: React.FC = () => {
                             {isCanceled ? (
                                 <button onClick={handleReactivateSubscription} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 text-sm">Reactivate</button>
                             ) : (
-                                <button onClick={() => navigateTo('PLAN_SELECT')} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 text-sm">Change Plan</button>
+                                <button onClick={() => navigateTo('PLAN_SELECT')} className="px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover text-sm">Change Plan</button>
                             )}
                         </div>
                         {!isCanceled && user.subscription?.plan !== 'Free' && (
@@ -83,7 +83,7 @@ export const SubscriptionScreen: React.FC = () => {
                         )}
                     </div>
                     {/* Payment & Billing */}
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <h3 className="text-xl font-bold">Payment Method</h3>
@@ -93,29 +93,29 @@ export const SubscriptionScreen: React.FC = () => {
                                         <p>Expires {user.paymentMethod.expiry}</p>
                                     </div>
                                 ): <p className="mt-4 text-sm text-gray-500">No payment method on file.</p>}
-                                <button onClick={() => navigateTo('PAYMENT_DETAILS')} className="mt-2 text-sm font-semibold text-blue-600 hover:underline">Manage</button>
+                                <button onClick={() => navigateTo('PAYMENT_DETAILS')} className="mt-2 text-sm font-semibold text-brand-accent hover:underline">Manage</button>
                             </div>
                              <div>
                                 <h3 className="text-xl font-bold">Billing History</h3>
                                 <p className="mt-4 text-sm text-gray-500">View your past invoices and charges.</p>
-                                <button onClick={() => navigateTo('BILLING_HISTORY')} className="mt-2 text-sm font-semibold text-blue-600 hover:underline">View history</button>
+                                <button onClick={() => navigateTo('BILLING_HISTORY')} className="mt-2 text-sm font-semibold text-brand-accent hover:underline">View history</button>
                             </div>
                          </div>
                     </div>
                 </div>
                 {/* Right Column */}
                 <div className="space-y-8">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                          <h3 className="text-lg font-bold mb-2">Credit Balance</h3>
                          <p className="text-4xl font-extrabold">{user.credits?.current}</p>
                          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2">
-                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(user.credits?.current || 0) / (user.credits?.total || 1) * 100}%` }}></div>
+                            <div className="bg-brand-accent h-2.5 rounded-full" style={{ width: `${(user.credits?.current || 0) / (user.credits?.total || 1) * 100}%` }}></div>
                          </div>
                     </div>
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                          <h3 className="text-lg font-bold">Buy More Credits</h3>
                          <p className="text-sm text-gray-500 mt-1">Need a top-up?</p>
-                         <button onClick={() => addCredits(creditPacks[1].credits)} disabled={!canBuyCredits} className="mt-3 w-full p-3 border rounded-lg text-left hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                         <button onClick={() => addCredits(creditPacks[1].credits)} disabled={!canBuyCredits} className="mt-3 w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg text-left hover:border-brand-accent hover:bg-brand-accent/10 dark:hover:bg-brand-accent/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             <p className="font-bold">{creditPacks[1].credits} Credits for ${creditPacks[1].price}.00</p>
                          </button>
                          {!canBuyCredits && <p className="text-xs mt-2 text-yellow-600">Available on Basic and Pro plans.</p>}

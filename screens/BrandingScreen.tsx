@@ -5,6 +5,7 @@ import type { BrandProfile, UploadedFile } from '../types';
 import { AssetPreview } from '../components/AssetPreview';
 import { Uploader } from '../components/Uploader';
 import { XMarkIcon, PlusCircleIcon, TrashIcon } from '../components/icons';
+import { ModalWrapper } from '../components/ModalWrapper';
 
 const ResetDnaModal: React.FC<{
     isOpen: boolean;
@@ -23,8 +24,8 @@ const ResetDnaModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+        <ModalWrapper isOpen={isOpen} onClose={onClose}>
+            <div className="bg-white dark:bg-black rounded-2xl shadow-xl w-full max-w-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Reset Brand DNA</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                     Enter a new website URL to fetch and replace your current Brand DNA. This action cannot be undone.
@@ -35,7 +36,7 @@ const ResetDnaModal: React.FC<{
                         value={newUrl}
                         onChange={(e) => setNewUrl(e.target.value)}
                         placeholder="https://yournewbrand.com"
-                        className="w-full p-3 border rounded-lg"
+                        className="w-full p-3 border rounded-lg input-focus-brand"
                         autoFocus
                     />
                 </div>
@@ -43,9 +44,9 @@ const ResetDnaModal: React.FC<{
                     <button
                         onClick={handleConfirm}
                         disabled={!newUrl || isFetching}
-                        className="w-full sm:flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                        className="w-full sm:flex-1 px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover disabled:opacity-50 flex items-center justify-center"
                     >
-                        {isFetching ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Reset and Fetch'}
+                        {isFetching ? <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div> : 'Reset and Fetch'}
                     </button>
                     <button
                         onClick={onClose}
@@ -56,7 +57,7 @@ const ResetDnaModal: React.FC<{
                     </button>
                 </div>
             </div>
-        </div>
+        </ModalWrapper>
     );
 };
 
@@ -162,8 +163,8 @@ export const BrandingScreen: React.FC = () => {
     if (!localProfile && !isLoading) {
         return (
             <div className="max-w-2xl mx-auto text-center">
-                <h2 className="text-3xl font-bold">Define Your Brand DNA</h2>
-                <p className="mt-2 text-gray-500">Enter your website URL, and our AI will analyze it to automatically create your brand profile.</p>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Define Your Brand DNA</h2>
+                <p className="mt-2 text-gray-500 dark:text-gray-300">Enter your website URL, and our AI will analyze it to automatically create your brand profile.</p>
                 <div className="mt-8 flex gap-2">
                      <input
                         id="brandUrl"
@@ -171,12 +172,12 @@ export const BrandingScreen: React.FC = () => {
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         placeholder="https://yourbrand.com"
-                        className="w-full p-3 border rounded-lg"
+                        className="w-full p-3 border rounded-lg input-focus-brand"
                     />
                     <button
                         onClick={() => handleFetchBrandProfile(url)}
                         disabled={isLoading || !url}
-                        className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                        className="px-6 py-3 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors disabled:bg-gray-400"
                     >
                         Fetch
                     </button>
@@ -199,7 +200,7 @@ export const BrandingScreen: React.FC = () => {
     return (
         <div className="max-w-4xl mx-auto">
              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold">Your Brand DNA</h2>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Your Brand DNA</h2>
                 <button
                     onClick={() => setIsResetModalOpen(true)}
                     className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-red-600"
@@ -213,12 +214,12 @@ export const BrandingScreen: React.FC = () => {
                     <h3 className="text-xl font-bold mb-4">Business Information</h3>
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="businessName" className="font-semibold block mb-1 text-sm">Business Name</label>
-                            <input type="text" id="businessName" value={localProfile.businessName} onChange={e => handleFieldChange('businessName', e.target.value)} className="w-full p-2 border rounded" placeholder="Your Business Name"/>
+                            <label htmlFor="businessName" className="block mb-1 text-sm">Business Name</label>
+                            <input type="text" id="businessName" value={localProfile.businessName} onChange={e => handleFieldChange('businessName', e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Your Business Name"/>
                         </div>
                          <div>
-                            <label htmlFor="businessOverview" className="font-semibold block mb-1 text-sm">Business Overview</label>
-                            <textarea id="businessOverview" value={localProfile.businessOverview} onChange={e => handleFieldChange('businessOverview', e.target.value)} className="w-full p-2 border rounded h-32" placeholder="What your business does, sells, its industry, values, and mission."/>
+                            <label htmlFor="businessOverview" className="block mb-1 text-sm">Business Overview</label>
+                            <textarea id="businessOverview" value={localProfile.businessOverview} onChange={e => handleFieldChange('businessOverview', e.target.value)} className="w-full p-2 border rounded h-32 input-focus-brand" placeholder="What your business does, sells, its industry, values, and mission."/>
                         </div>
                     </div>
                 </div>
@@ -228,11 +229,11 @@ export const BrandingScreen: React.FC = () => {
                     <h3 className="text-xl font-bold mb-4">Visual Identity</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <h4 className="font-semibold mb-2">Logo</h4>
+                            <h4 className="mb-2">Logo</h4>
                              {localProfile.logoFile ? (
-                                <div className="relative w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                                <div className="relative w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg">
                                     <AssetPreview asset={localProfile.logoFile} />
-                                    <button onClick={handleLogoRemove} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
+                                    <button onClick={handleLogoRemove} className="absolute -top-2 -right-2 z-10 bg-black text-white dark:bg-white dark:text-black rounded-full p-1 shadow-md">
                                         <XMarkIcon className="w-5 h-5" />
                                     </button>
                                 </div>
@@ -241,7 +242,7 @@ export const BrandingScreen: React.FC = () => {
                             )}
                         </div>
                          <div>
-                            <h4 className="font-semibold mb-2">Color Palette</h4>
+                            <h4 className="mb-2">Color Palette</h4>
                             <div className="space-y-2">
                                 {localProfile.colors.map((color, index) => (
                                     <div key={index} className="flex items-center gap-2">
@@ -259,29 +260,29 @@ export const BrandingScreen: React.FC = () => {
                                                 title={`Change ${color.label} color`}
                                             />
                                         </div>
-                                        <input type="text" value={color.label} onChange={e => handleColorChange(index, 'label', e.target.value)} className="w-full p-2 border rounded text-sm" placeholder="Color Label"/>
-                                        <input type="text" value={color.hex} onChange={e => handleColorChange(index, 'hex', e.target.value)} className="w-24 p-2 border rounded text-sm"/>
+                                        <input type="text" value={color.label} onChange={e => handleColorChange(index, 'label', e.target.value)} className="w-full p-4 border rounded text-sm input-focus-brand" placeholder="Color Label"/>
+                                        <input type="text" value={color.hex} onChange={e => handleColorChange(index, 'hex', e.target.value)} className="w-24 p-4 border rounded text-sm input-focus-brand"/>
                                          <button onClick={() => removeFromArray('colors', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                                     </div>
                                 ))}
-                                <button onClick={() => addToArray('colors')} className="text-sm font-semibold text-blue-600 flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('colors')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                     </div>
                     <div className="mt-6">
-                        <h4 className="font-semibold mb-2">Fonts</h4>
+                        <h4 className="mb-2">Fonts</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                              <div>
-                                <label className="font-semibold block mb-1 text-sm text-gray-500 dark:text-gray-400">Header</label>
-                                <input type="text" value={localProfile.fonts.header} onChange={e => handleFontChange('header', e.target.value)} className="w-full p-2 border rounded" placeholder="Header Font"/>
+                                <label className="block mb-1 text-sm text-gray-500 dark:text-gray-400">Header</label>
+                                <input type="text" value={localProfile.fonts.header} onChange={e => handleFontChange('header', e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Header Font"/>
                             </div>
                              <div>
-                                <label className="font-semibold block mb-1 text-sm text-gray-500 dark:text-gray-400">Sub-Header</label>
-                                <input type="text" value={localProfile.fonts.subHeader} onChange={e => handleFontChange('subHeader', e.target.value)} className="w-full p-2 border rounded" placeholder="Sub-Header Font"/>
+                                <label className="block mb-1 text-sm text-gray-500 dark:text-gray-400">Sub-Header</label>
+                                <input type="text" value={localProfile.fonts.subHeader} onChange={e => handleFontChange('subHeader', e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Sub-Header Font"/>
                             </div>
                              <div>
-                                <label className="font-semibold block mb-1 text-sm text-gray-500 dark:text-gray-400">Body</label>
-                                <input type="text" value={localProfile.fonts.body} onChange={e => handleFontChange('body', e.target.value)} className="w-full p-2 border rounded" placeholder="Body Font"/>
+                                <label className="block mb-1 text-sm text-gray-500 dark:text-gray-400">Body</label>
+                                <input type="text" value={localProfile.fonts.body} onChange={e => handleFontChange('body', e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Body Font"/>
                             </div>
                         </div>
                     </div>
@@ -292,27 +293,27 @@ export const BrandingScreen: React.FC = () => {
                     <h3 className="text-xl font-bold mb-4">Mission</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <h4 className="font-semibold mb-2">Mission Statements</h4>
+                            <h4 className="mb-2">Mission Statements</h4>
                             <div className="space-y-2">
                                 {localProfile.missionStatements.map((statement, index) => (
                                     <div key={index} className="flex items-center gap-2">
-                                        <input type="text" value={statement} onChange={e => handleArrayChange('missionStatements', index, e.target.value)} className="w-full p-2 border rounded" placeholder="Inspiring mission statement..."/>
+                                        <input type="text" value={statement} onChange={e => handleArrayChange('missionStatements', index, e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Inspiring mission statement..."/>
                                         <button onClick={() => removeFromArray('missionStatements', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                                     </div>
                                 ))}
-                                <button onClick={() => addToArray('missionStatements')} className="text-sm font-semibold text-blue-600 flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('missionStatements')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                         <div>
-                            <h4 className="font-semibold mb-2">Brand Values</h4>
+                            <h4 className="mb-2">Brand Values</h4>
                             <div className="space-y-2">
                                 {localProfile.brandValues.map((val, index) => (
                                 <div key={index} className="flex items-center gap-2">
-                                    <input type="text" value={val} onChange={e => handleArrayChange('brandValues', index, e.target.value)} className="w-full p-2 border rounded" placeholder="A core brand value..."/>
+                                    <input type="text" value={val} onChange={e => handleArrayChange('brandValues', index, e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="A core brand value..."/>
                                     <button onClick={() => removeFromArray('brandValues', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                                 </div>
                                 ))}
-                                <button onClick={() => addToArray('brandValues')} className="text-sm font-semibold text-blue-600 flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('brandValues')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                     </div>
@@ -323,34 +324,34 @@ export const BrandingScreen: React.FC = () => {
                      <h3 className="text-xl font-bold mb-4">Brand Personality</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <h4 className="font-semibold mb-2">Brand Tone of Voice</h4>
+                            <h4 className="mb-2">Brand Tone of Voice</h4>
                             <div className="space-y-2">
                                 {localProfile.toneOfVoice.map((tone, index) => (
                                 <div key={index} className="flex items-center gap-2">
-                                    <input type="text" value={tone} onChange={e => handleArrayChange('toneOfVoice', index, e.target.value)} className="w-full p-2 border rounded" placeholder="e.g., Playful and Witty"/>
+                                    <input type="text" value={tone} onChange={e => handleArrayChange('toneOfVoice', index, e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="e.g., Playful and Witty"/>
                                     <button onClick={() => removeFromArray('toneOfVoice', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                                 </div>
                                 ))}
-                                <button onClick={() => addToArray('toneOfVoice')} className="text-sm font-semibold text-blue-600 flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('toneOfVoice')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                          <div>
-                            <h4 className="font-semibold mb-2">Brand Aesthetics</h4>
+                            <h4 className="mb-2">Brand Aesthetics</h4>
                             <div className="space-y-2">
                                 {localProfile.brandAesthetics.map((aesthetic, index) => (
                                 <div key={index} className="flex items-center gap-2">
-                                    <input type="text" value={aesthetic} onChange={e => handleArrayChange('brandAesthetics', index, e.target.value)} className="w-full p-2 border rounded" placeholder="e.g., Minimal and Clean"/>
+                                    <input type="text" value={aesthetic} onChange={e => handleArrayChange('brandAesthetics', index, e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="e.g., Minimal and Clean"/>
                                     <button onClick={() => removeFromArray('brandAesthetics', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                                 </div>
                                 ))}
-                                <button onClick={() => addToArray('brandAesthetics')} className="text-sm font-semibold text-blue-600 flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('brandAesthetics')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                      </div>
                 </div>
                 
                 <div className="flex justify-end pt-4">
-                    <button onClick={handleSave} disabled={!isDirty} className="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={handleSave} disabled={!isDirty} className="px-8 py-3 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         Save Changes
                     </button>
                 </div>

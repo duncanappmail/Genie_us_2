@@ -75,7 +75,6 @@ export const AssetPreview: React.FC<AssetPreviewProps> = React.memo(({ asset, ob
                         autoPlay 
                         loop 
                         playsInline 
-                        // Fix: The 'loading' attribute is not valid for <video> elements.
                     />
                     {onClick && (
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all duration-300">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
@@ -5,11 +6,11 @@ import { useProjects } from '../context/ProjectContext';
 import { AssetPreview } from '../components/AssetPreview';
 import {
     ArrowDownTrayIcon, LeftArrowIcon, LightbulbIcon,
-    RightArrowIcon
+    RightArrowIcon, SparklesIcon
 } from '../components/icons';
 import type { CampaignPackage, UploadedFile } from '../types';
 import { PromptDisplayModal } from '../components/PromptDisplayModal';
-import { CREDIT_COSTS } from '../App';
+import { CREDIT_COSTS } from '../constants';
 import { SocialCopyEditor } from '../components/SocialCopyEditor';
 import { VideoLightbox } from '../components/VideoLightbox';
 
@@ -61,7 +62,7 @@ export const AgentResultScreen: React.FC = () => {
             <div className="text-center p-8">
                 <h2 className="text-2xl font-bold">No Campaign Data</h2>
                 <p className="mt-2 text-gray-500">Could not load campaign data for this project.</p>
-                <button onClick={() => navigateTo('HOME')} className="mt-6 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
+                <button onClick={() => navigateTo('HOME')} className="mt-6 px-6 py-2 bg-[#91EB23] text-[#050C26] font-bold rounded-lg hover:bg-[#75CB0C]">
                     Back to Home
                 </button>
             </div>
@@ -104,11 +105,11 @@ export const AgentResultScreen: React.FC = () => {
 
     const renderNav = (index: number, setIndex: React.Dispatch<React.SetStateAction<number>>, total: number) => (
         <div className="flex items-center justify-center gap-4 mt-4">
-            <button onClick={() => setIndex(prev => Math.max(0, prev - 1))} disabled={index === 0} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50">
+            <button onClick={() => setIndex(prev => Math.max(0, prev - 1))} disabled={index === 0} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:bg-transparent disabled:border disabled:border-gray-200 disabled:text-gray-400 dark:disabled:border-gray-700 dark:disabled:text-gray-400">
                 <LeftArrowIcon className="w-6 h-6" />
             </button>
             <span className="font-mono text-sm">{index + 1} / {total}</span>
-            <button onClick={() => setIndex(prev => Math.min(total - 1, prev + 1))} disabled={index === total - 1} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50">
+            <button onClick={() => setIndex(prev => Math.min(total - 1, prev + 1))} disabled={index === total - 1} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 disabled:bg-transparent disabled:border disabled:border-gray-200 disabled:text-gray-400 dark:disabled:border-gray-700 dark:disabled:text-gray-400">
                 <RightArrowIcon className="w-6 h-6" />
             </button>
         </div>
@@ -120,13 +121,13 @@ export const AgentResultScreen: React.FC = () => {
     const isImage = !currentVideo;
 
     const renderVisualSection = (asset: UploadedFile, isImage: boolean) => (
-        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col border h-full">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg flex flex-col h-full">
             <div className="flex justify-between items-center mb-4">
-                <button onClick={() => navigateTo('AGENT')} className="flex items-center gap-1 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
+                <button onClick={() => navigateTo('AGENT')} className="flex items-center gap-1 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-brand-accent">
                     <LeftArrowIcon className="w-4 h-4" />
                     Back
                 </button>
-                <button onClick={() => setIsPromptModalOpen(true)} className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                <button onClick={() => setIsPromptModalOpen(true)} className="text-sm font-semibold text-brand-accent hover:underline">
                     Show Prompt
                 </button>
             </div>
@@ -148,19 +149,18 @@ export const AgentResultScreen: React.FC = () => {
                             value={refinePrompt}
                             onChange={handleRefineInputChange}
                             placeholder="Want changes? Please describe"
-                            className="w-full p-3 pr-44 border rounded-lg resize-none overflow-hidden transition-all focus:ring-2 focus:ring-blue-500 dark:border-gray-600 min-h-[4.5rem] hover:border-blue-400 dark:hover:border-blue-500"
-                            disabled={credits < CREDIT_COSTS.refine}
+                            className="w-full p-3 pr-44 border rounded-lg resize-none overflow-hidden transition-all dark:border-gray-600 min-h-[4.5rem] hover:border-gray-400 dark:hover:border-gray-500 input-focus-brand force-bg-black"
+                            disabled={credits < CREDIT_COSTS.base.refine}
                         />
                         <button
                             type="submit"
-                            disabled={isRefining || !refinePrompt || credits < CREDIT_COSTS.refine}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 transition-colors text-sm"
-                            aria-label="Generate changes"
+                            disabled={isRefining || !refinePrompt || credits < CREDIT_COSTS.base.refine}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors text-sm"
                         >
                             {isRefining ? (
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-5 h-5 border-2 border-on-accent border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                `Generate (${CREDIT_COSTS.refine} credit)`
+                                `Generate (${CREDIT_COSTS.base.refine} credit)`
                             )}
                         </button>
                     </form>
@@ -169,14 +169,22 @@ export const AgentResultScreen: React.FC = () => {
             
              <div className="mt-6 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => handleRegenerate(isImage ? 'image' : 'video')} disabled={isRegenerating === (isImage ? 'image' : 'video')} className="action-btn">
+                    <button 
+                        onClick={() => handleRegenerate(isImage ? 'image' : 'video')} 
+                        disabled={isRegenerating === (isImage ? 'image' : 'video')} 
+                        className="w-full flex items-center justify-center gap-2 py-3 px-4 border rounded-lg font-semibold transition-colors text-sm border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-transparent disabled:border-gray-200 disabled:text-gray-400 dark:disabled:bg-transparent dark:disabled:border-gray-700 dark:disabled:text-gray-500"
+                    >
                         {(isRegenerating === 'image' && isImage) || (isRegenerating === 'video' && !isImage)
                             ? <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                             : 'Regenerate'
                         }
                     </button>
                     {isImage ? (
-                        <button onClick={() => handleAnimate(imageIndex)} disabled={isAnimating === imageIndex || plan !== 'Pro' || credits < CREDIT_COSTS.animate} className="action-btn">
+                        <button 
+                            onClick={() => handleAnimate(imageIndex)} 
+                            disabled={isAnimating === imageIndex || plan !== 'Pro' || credits < CREDIT_COSTS.base.animate} 
+                            className="w-full flex items-center justify-center gap-2 py-3 px-4 border rounded-lg font-semibold transition-colors text-sm border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-transparent disabled:border-gray-200 disabled:text-gray-400 dark:disabled:bg-transparent dark:disabled:border-gray-700 dark:disabled:text-gray-500"
+                        >
                             {isAnimating === imageIndex
                                 ? <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                                 : `Animate${plan !== 'Pro' ? ' (Pro)' : ''}`
@@ -189,7 +197,7 @@ export const AgentResultScreen: React.FC = () => {
                     )}
                 </div>
                  <div className="grid grid-cols-1 gap-3">
-                    <button onClick={() => downloadAsset(asset)} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                    <button onClick={() => downloadAsset(asset)} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors">
                         <ArrowDownTrayIcon className="w-5 h-5" />
                         Download
                     </button>
@@ -200,7 +208,7 @@ export const AgentResultScreen: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto">
-            <button onClick={() => navigateTo('HOME')} className="flex items-center gap-2 text-sm font-semibold mb-6 hover:text-blue-600">
+            <button onClick={() => navigateTo('HOME')} className="flex items-center gap-2 text-sm font-semibold mb-6 text-brand-accent hover:text-brand-accent-hover">
                 <LeftArrowIcon className="w-4 h-4"/> Back to Home
             </button>
             <div className="text-center mb-8">
@@ -214,10 +222,10 @@ export const AgentResultScreen: React.FC = () => {
                 </div>
 
                 <div className="lg:col-span-2 space-y-8">
-                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border">
+                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded-full">
-                                <LightbulbIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            <div className="bg-brand-accent/20 dark:bg-brand-accent/10 p-2 rounded-full">
+                                <LightbulbIcon className="w-5 h-5 text-brand-accent" />
                             </div>
                             <h3 className="text-lg font-bold">Campaign Strategy</h3>
                         </div>

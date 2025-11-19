@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { CreativeMode, Project, Template, UploadedFile } from '../types';
 import { AssetPreview } from '../components/AssetPreview';
-import { SparklesIcon, TrashIcon, DocumentTextIcon, UserCircleIcon, TshirtIcon, ImageIcon, VideoIcon } from '../components/icons';
+import { SparklesIcon, TrashIcon, DocumentTextIcon, UserCircleIcon, TshirtIcon, ImageIcon, VideoIcon, MagnifyingGlassIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
@@ -16,6 +16,98 @@ const GREETINGS = [
     'What would you like to create today?',
 ];
 
+type TemplatePillCategory = 'Product Placement' | 'UGC' | 'Visual Effects';
+
+const AIAgentHomeModule: React.FC = () => {
+    const { user } = useAuth();
+    const { theme, navigateTo } = useUI();
+    const { handleAgentUrlRetrieval } = useProjects();
+    const [url, setUrl] = useState('');
+    const [urlError, setUrlError] = useState(false);
+
+    const plan = user?.subscription?.plan || 'Free';
+    const isPro = plan === 'Pro';
+
+    const handleRetrieve = async () => {
+        setUrlError(false);
+        
+        let fullUrl = url.trim();
+        if (!fullUrl) {
+            setUrlError(true);
+            alert("Please enter a URL.");
+            return;
+        }
+
+        if (!/^(https?:\/\/)/i.test(fullUrl)) {
+            fullUrl = `https://${fullUrl}`;
+        }
+
+        try {
+            // This is a simple client-side check for a valid URL structure.
+            new URL(fullUrl);
+        } catch (_) {
+            setUrlError(true);
+            alert("Please enter a valid URL format (e.g., yourbrand.com).");
+            return;
+        }
+
+        try {
+            // This function will throw an error on failure, which we'll catch.
+            await handleAgentUrlRetrieval(fullUrl);
+        } catch (e) {
+            // The context shows the alert; we just need to update the UI state.
+            setUrlError(true);
+        }
+    };
+    
+    if (!isPro) {
+        return (
+             <div className="w-full p-6 text-left rounded-xl transition-all border border-gray-300 dark:border-gray-700 relative flex flex-col justify-center items-center bg-gray-50 dark:bg-gray-800/50">
+                <div className="text-center">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">From Product URL to an Ad</h3>
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">Your Marketing Genie will handle the rest</p>
+                </div>
+                <div className="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm flex justify-center items-center rounded-xl">
+                    <button onClick={() => navigateTo('PLAN_SELECT')} className="px-6 py-3 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors">
+                        Upgrade to Pro to Unlock
+                    </button>
+                </div>
+            </div>
+        );
+    }
+    
+    return (
+        <div className="w-full p-6 text-left rounded-xl transition-all bg-[#131517] relative flex flex-col md:flex-row md:items-center justify-between">
+            <div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">From Product URL to an Ad</h3>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">Your Marketing Genie will handle the rest</p>
+            </div>
+            <div className="mt-4 md:mt-0 flex gap-4 w-full md:w-1/2">
+                <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => {
+                        setUrl(e.target.value);
+                        if (urlError) setUrlError(false); // Clear error on new input
+                    }}
+                    placeholder="Enter product page URL..."
+                    className={`flex-grow w-full p-3 border rounded-lg bg-white dark:force-bg-black input-focus-brand ${urlError ? 'border-red-500' : 'dark:border-gray-600'}`}
+                    style={theme === 'dark' ? { backgroundColor: '#000000' } : {}}
+                />
+                <button
+                    onClick={handleRetrieve}
+                    disabled={!url}
+                    className="px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors flex items-center justify-center gap-2 shrink-0"
+                >
+                    <MagnifyingGlassIcon className="w-5 h-5" />
+                    Retrieve
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
 export const HomeScreen: React.FC = () => {
     const { user } = useAuth();
     const { navigateTo } = useUI();
@@ -29,7 +121,7 @@ export const HomeScreen: React.FC = () => {
     
     const [promptToShow, setPromptToShow] = useState<string | null>(null);
     const [greeting, setGreeting] = useState(GREETINGS[0]);
-    const [activeTemplateType, setActiveTemplateType] = useState<'image' | 'video'>('image');
+    const [activePill, setActivePill] = useState<TemplatePillCategory>('Product Placement');
     const [lightboxAsset, setLightboxAsset] = useState<UploadedFile | null>(null);
     const recentProjects = projects.slice(0, 5);
 
@@ -41,16 +133,12 @@ export const HomeScreen: React.FC = () => {
 
     const plan = user?.subscription?.plan || 'Free';
     const modes = [
-        { name: 'Product Ad', title: 'Create a Product Ad', description: 'Drop your product into any scene. Instant ad-ready!', enabled: true, icon: <TshirtIcon className="w-8 h-8 text-blue-500" /> },
-        { name: 'Art Maker', title: 'Turn Ideas to Visuals', description: 'Create a scene, a moment, a piece of art.', enabled: true, icon: <ImageIcon className="w-8 h-8 text-blue-500" /> },
-        { name: 'Create a UGC Video', title: 'Create a UGC Video', description: 'Generate a realistic presenter to deliver your message.', enabled: plan === 'Pro', icon: <UserCircleIcon className="w-8 h-8 text-blue-500" /> },
-        { name: 'Video Maker', title: 'Make a Video', description: 'Create a video from an idea, or animate an image', enabled: plan === 'Pro', icon: <VideoIcon className="w-8 h-8 text-blue-500" /> },
-        { name: 'AI Agent', title: 'Unleash Your Marketing Genie', description: "Hand me your product, and I'll grant you a complete marketing campaign", enabled: plan === 'Pro' },
+        { name: 'Product Ad', title: 'Launch Product Ad Campaign', description: 'Place your product into any scene', enabled: true, imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/548af5e5-dcaa-430e-977c-2f877121679b.png' },
+        { name: 'Art Maker', title: 'Turn Ideas to Visuals', description: 'Create a scene, a moment, a piece of art', enabled: true, imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/611e5a83-77f0-44b3-971f-6c0e0b174582.png' },
+        { name: 'Create a UGC Video', title: 'Create a UGC Video', description: 'A presenter delivering your message', enabled: plan === 'Pro', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.34.57%E2%80%AFAM.png' },
+        { name: 'Video Maker', title: 'Make a Video', description: 'Animate an image or create from an idea', enabled: plan === 'Pro', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.19.03%E2%80%AFAM.png' },
     ];
     
-    const nonAgentModes = modes.slice(0, 4);
-    const agentMode = modes[4];
-
     // --- Dynamic Template Logic ---
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth(); // 0-11
@@ -58,7 +146,11 @@ export const HomeScreen: React.FC = () => {
     const isSecondHalfOfMonth = currentDate.getDate() > 15;
 
     // Filter by type first
-    const baseTemplates = TEMPLATE_LIBRARY.filter(t => t.type === activeTemplateType);
+    const baseTemplates = TEMPLATE_LIBRARY.filter(t => {
+        if (activePill === 'Product Placement') return t.type === 'image' && t.category !== 'UGC';
+        if (activePill === 'UGC') return t.category === 'UGC';
+        return false;
+    });
 
     const isHolidayOrEventActive = (template: Template): boolean => {
         if (!template.activeMonths) return false;
@@ -83,10 +175,12 @@ export const HomeScreen: React.FC = () => {
     const studioTemplates = baseTemplates.filter(t => t.category === 'Studio');
     const lifestyleTemplates = baseTemplates.filter(t => t.category === 'Lifestyle');
     const surrealTemplates = baseTemplates.filter(t => t.category === 'Surreal');
+    const ugcTemplates = baseTemplates.filter(t => t.category === 'UGC');
 
     const prioritizedTemplates = [
         ...activeHolidayTemplates,
         ...activeSeasonalTemplates,
+        ...ugcTemplates,
         ...studioTemplates,
         ...lifestyleTemplates,
         ...surrealTemplates
@@ -111,50 +205,45 @@ export const HomeScreen: React.FC = () => {
             setLightboxAsset(asset);
         }
     };
+    
+    const pillCategories: TemplatePillCategory[] = ['Product Placement', 'UGC', 'Visual Effects'];
 
     return (
         <div className="max-w-7xl mx-auto">
             {/* Mode Selection */}
             <div className="text-center mb-16">
                 <h2 className="text-4xl font-bold">{greeting}</h2>
-                <div className="mt-8 max-w-5xl mx-auto space-y-4">
-                    {agentMode && (
-                        <button
-                            key={agentMode.name}
-                            onClick={() => agentMode.enabled ? startNewProject(agentMode.name as CreativeMode) : navigateTo('PLAN_SELECT')}
-                            className="w-full p-6 text-left rounded-xl hover:shadow-md transition-all border border-blue-200 dark:border-blue-800 relative hover:-translate-y-1 flex flex-col md:flex-row md:items-center justify-between bg-blue-50 dark:bg-blue-900/30"
-                        >
-                            <div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{agentMode.title}</h3>
-                                <p className="mt-2 text-gray-600 dark:text-gray-400">{agentMode.description}</p>
-                            </div>
-                            {!agentMode.enabled && (
-                                <div className="mt-4 md:mt-0">
-                                    <span className="text-sm font-semibold bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full dark:bg-blue-800 dark:text-blue-200">
-                                        Upgrade to unlock
-                                    </span>
-                                </div>
-                            )}
-                        </button>
-                    )}
+                <div className="mt-8 space-y-4">
+                    <AIAgentHomeModule />
                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {nonAgentModes.map(mode => (
-                            <button 
+                        {modes.map(mode => (
+                             <a
                                 key={mode.name}
                                 onClick={() => mode.enabled ? startNewProject(mode.name as CreativeMode) : navigateTo('PLAN_SELECT')}
-                                className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 text-left relative hover:-translate-y-1 flex flex-col h-full"
+                                className="group text-left"
                             >
-                                {mode.icon}
-                                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mt-4">{mode.title}</h3>
-                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 flex-grow">{mode.description}</p>
-                                {!mode.enabled && (
-                                    <div className="mt-4">
-                                        <span className="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
-                                            Upgrade to unlock
-                                        </span>
-                                    </div>
-                                )}
-                            </button>
+                                <div
+                                    className="relative overflow-hidden rounded-xl aspect-square cursor-pointer"
+                                    onMouseEnter={(e) => e.currentTarget.parentElement?.setAttribute('data-hovering', 'true')}
+                                    onMouseLeave={(e) => e.currentTarget.parentElement?.removeAttribute('data-hovering')}
+                                >
+                                    <img src={mode.imageUrl} alt={mode.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                     {!mode.enabled && (
+                                        <>
+                                            <div className="absolute inset-0 bg-black/40" />
+                                            <div className="absolute top-3 right-3">
+                                                <span className="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
+                                                    Upgrade
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="mt-3 cursor-default">
+                                    <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 transition-colors card-title">{mode.title}</h3>
+                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 transition-colors group-hover:text-brand-accent">{mode.description}</p>
+                                </div>
+                            </a>
                         ))}
                     </div>
                 </div>
@@ -165,71 +254,63 @@ export const HomeScreen: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
                     <h2 className="text-3xl font-bold text-left shrink-0">Use Template</h2>
                     <div className="flex items-center gap-2 sm:gap-4 w-full md:w-auto">
-                        <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                            <button
-                                onClick={() => setActiveTemplateType('image')}
-                                className={`flex items-center gap-2 px-4 sm:px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
-                                    activeTemplateType === 'image' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
-                                }`}
-                            >
-                                <ImageIcon className="w-5 h-5" /> Image
-                            </button>
-                            <button
-                                onClick={() => setActiveTemplateType('video')}
-                                className={`flex items-center gap-2 px-4 sm:px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
-                                    activeTemplateType === 'video' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
-                                }`}
-                            >
-                               <VideoIcon className="w-5 h-5" /> Video
-                            </button>
+                        <div className="flex items-center gap-2">
+                            {pillCategories.map((category) => (
+                                <button
+                                    key={category}
+                                    onClick={() => setActivePill(category)}
+                                    className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
+                                        activePill === category
+                                            ? 'bg-brand-accent text-on-accent'
+                                            : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                    }`}
+                                >
+                                    {category}
+                                </button>
+                            ))}
                         </div>
                         <div className="flex-grow md:flex-grow-0"></div>
                         <button 
                             onClick={() => navigateTo('EXPLORE')}
-                            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-sm shrink-0"
+                            className="px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors text-sm shrink-0"
                         >
                             Explore all
                         </button>
                     </div>
                 </div>
 
-                {activeTemplateType === 'image' && featuredTemplates.length > 0 ? (
+                {featuredTemplates.length > 0 ? (
                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {featuredTemplates.map((template: Template) => (
-                            <div 
+                            <a 
                                 key={template.id} 
                                 onClick={() => selectTemplate(template)}
-                                className="cursor-pointer group relative overflow-hidden rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 h-56"
+                                className="group text-left"
                             >
-                                <div className="absolute top-3 left-3 z-10 bg-black/50 text-white text-xs font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
-                                    {template.category}
-                                </div>
-                                <img src={template.previewImageUrl} alt={template.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                <div className="absolute bottom-0 left-0 p-4 w-full">
-                                    <h3 className="text-white font-bold text-base">{template.title}</h3>
-                                </div>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setPromptToShow(template.imageGenerationPrompt);
-                                    }}
-                                    className="absolute top-2 right-2 p-1.5 bg-black/40 rounded-full text-white hover:bg-black/60 transition-colors opacity-0 group-hover:opacity-100"
-                                    aria-label="Show image generation prompt"
+                                <div
+                                    className="relative overflow-hidden rounded-xl aspect-square cursor-pointer"
+                                    onMouseEnter={(e) => e.currentTarget.parentElement?.setAttribute('data-hovering', 'true')}
+                                    onMouseLeave={(e) => e.currentTarget.parentElement?.removeAttribute('data-hovering')}
                                 >
-                                    <DocumentTextIcon className="w-4 h-4" />
-                                </button>
-                            </div>
+                                    <div className="absolute top-3 left-3 z-10 bg-black/50 text-white text-xs font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
+                                        {template.category}
+                                    </div>
+                                    <img src={template.previewImageUrl} alt={template.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                </div>
+                                 <div className="mt-3 cursor-default">
+                                    <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 transition-colors card-title">{template.title}</h3>
+                                </div>
+                            </a>
                         ))}
                     </div>
                 ) : (
                     <div className="text-center py-16 px-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl col-span-full">
                         <SparklesIcon className="w-12 h-12 mx-auto text-gray-400" />
                         <h3 className="mt-4 text-xl font-semibold text-gray-500 dark:text-gray-400">
-                            Video Templates Coming Soon!
+                            {activePill} Templates Coming Soon!
                         </h3>
                         <p className="mt-2 text-gray-500">
-                            Our genies are hard at work crafting magical video templates. Check back soon!
+                            Our genies are hard at work crafting magical {activePill.toLowerCase()} templates. Check back soon!
                         </p>
                     </div>
                 )}
@@ -241,7 +322,7 @@ export const HomeScreen: React.FC = () => {
                 {projects.length > 5 && (
                     <button 
                         onClick={() => navigateTo('ALL_PROJECTS')}
-                        className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-sm shrink-0"
+                        className="px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors text-sm shrink-0"
                     >
                         See all
                     </button>
@@ -261,7 +342,7 @@ export const HomeScreen: React.FC = () => {
                                     {previewAsset ? <AssetPreview asset={previewAsset} objectFit="cover" hoverEffect={true} onClick={handlePreviewClick} /> : <SparklesIcon className="w-12 h-12 text-gray-400" />}
                                     <div className="absolute bottom-2 right-2 flex items-center gap-2">
                                         {p.generatedImages.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><ImageIcon className="w-4 h-4"/>{p.generatedImages.length}</div>}
-                                        {p.generatedVideos.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><VideoIcon className="w-4 h-4"/>{p.generatedVideos.length}</div>}
+                                        {p.generatedVideos.length > 0 && <div className="flex items-center gap-1.5 text-sm text-white bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm"><VideoIcon className="w-5 h-5"/>{p.generatedVideos.length}</div>}
                                     </div>
                                 </div>
                                 <div className="p-3 flex flex-col flex-grow">

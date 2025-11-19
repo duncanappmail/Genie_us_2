@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { LeftArrowIcon } from '../components/icons';
-import { PLANS } from '../App';
+import { PLANS } from '../constants';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 
@@ -40,7 +41,7 @@ export const BillingHistoryScreen: React.FC = () => {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 hover:text-blue-600">
+            <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 text-brand-accent hover:text-brand-accent-hover-subtle">
                 <LeftArrowIcon className="w-4 h-4"/> Back to Subscription
             </button>
             <h2 className="text-3xl font-bold">Billing History</h2>
@@ -68,7 +69,7 @@ export const BillingHistoryScreen: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        {item.id !== 'N/A' && <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Invoice</a>}
+                                        {item.id !== 'N/A' && <a href="#" className="font-medium text-brand-accent hover:underline">Invoice</a>}
                                     </td>
                                 </tr>
                             ))}

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useUI } from './context/UIContext';
 import { useAuth } from './context/AuthContext';
@@ -23,60 +24,17 @@ import { LoadingOverlay } from './components/LoadingOverlay';
 import { DeleteConfirmationModal } from './components/DeleteConfirmationModal';
 import { ExtendVideoModal } from './components/ExtendVideoModal';
 import { CancelSubscriptionModal } from './components/CancelSubscriptionModal';
-import type { PlanName } from './types';
-
+import { ProductSelectionModal } from './components/ProductSelectionModal';
 
 // Define AppStep type
-export type AppStep = 'AUTH' | 'PLAN_SELECT' | 'HOME' | 'ALL_PROJECTS' | 'GENERATE' | 'UGC_GENERATE' | 'PREVIEW' | 'SUBSCRIPTION' | 'BILLING_HISTORY' | 'PAYMENT_DETAILS' | 'EXPLORE' | 'AGENT' | 'AGENT_RESULT' | 'BRANDING';
-
-// --- Constants ---
-export const PLANS: Record<PlanName, any> = {
-    'Free': {
-        name: 'Free',
-        price: { monthly: 0, annually: 0 },
-        credits: 20,
-        features: ['Product Ad', 'Art Maker', 'Style Presets', 'Community Support']
-    },
-    'Basic': {
-        name: 'Basic',
-        price: { monthly: 20, annually: 168 },
-        credits: 150,
-        features: ['Product Ad', 'Art Maker', 'Style Presets', 'Buy Extra Credits', 'Email Support']
-    },
-    'Pro': {
-        name: 'Pro',
-        price: { monthly: 35, annually: 294 },
-        credits: 450,
-        features: [
-            'Everything in Basic', 
-            'Have Your Very Own AI Agent That Works Autonomously',
-            'Create UGC Videos',
-            'Make Social Videos', 
-            'Animate & Extend Videos', 
-            'All Advanced Video Settings', 
-            'Priority Support'
-        ]
-    }
-};
-
-export const CREDIT_COSTS = {
-    artMaker: 1,      // per image
-    productAd: 2,     // per image
-    refine: 1,
-    animate: 5,
-    videoFast: 10,
-    videoCinematic: 20,
-    videoExtend: 15,
-    agent: 25,
-    ugcVideo: 30, // Cost for UGC video generation
-};
-
+export type AppStep = 'AUTH' | 'PLAN_SELECT' | 'HOME' | 'ALL_PROJECTS' | 'GENERATE' | 'UGC_GENERATE' | 'PREVIEW' | 'SUBSCRIPTION' | 'BILLING_HISTORY' | 'PAYMENT_DETAILS' | 'EXPLORE' | 'AGENT' | 'AGENT_RESULT' | 'BRANDING' | 'AGENT_SETUP_PRODUCT';
 
 // Main App Component
 const App: React.FC = () => {
     const { 
         appStep, isLoading, isExtendModalOpen, isCancelModalOpen,
-        setIsExtendModalOpen, setIsCancelModalOpen
+        setIsExtendModalOpen, setIsCancelModalOpen,
+        productSelectionModalState, handleProductSelection
     } = useUI();
     const { user, handleCancelSubscription } = useAuth();
     const { 
@@ -94,6 +52,11 @@ const App: React.FC = () => {
             setCurrentProject(null);
         }
     }, [user, loadProjects, setProjects, setCurrentProject]);
+
+    // This effect ensures the page scrolls to the top on every navigation change.
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [appStep]);
 
     const renderScreen = () => {
         if (!user && appStep !== 'AUTH') {
@@ -117,6 +80,8 @@ const App: React.FC = () => {
                 return <PaymentDetailsScreen />;
             case 'GENERATE':
                 return <GeneratorScreen />;
+            case 'AGENT_SETUP_PRODUCT':
+                return <GeneratorScreen />;
             case 'UGC_GENERATE':
                 return <UGCGeneratorScreen />;
             case 'PREVIEW':
@@ -137,7 +102,7 @@ const App: React.FC = () => {
     const isInitialPlanSelection = user && !user.subscription;
 
     return (
-        <div className="min-h-screen font-sans text-gray-800 dark:text-gray-200">
+        <div className="min-h-screen font-sans text-gray-800 dark:text-white">
             {isLoading && <LoadingOverlay />}
             {user && appStep !== 'AUTH' && <Header isInitialPlanSelection={isInitialPlanSelection} />}
             <main key={appStep} className="p-4 sm:p-6 md:p-8 page-enter">
@@ -162,6 +127,12 @@ const App: React.FC = () => {
                 }}
                 planName={user?.subscription?.plan || ''}
                 renewsOn={user?.subscription?.renewsOn || 0}
+            />
+            <ProductSelectionModal
+                isOpen={productSelectionModalState.isOpen}
+                products={productSelectionModalState.products}
+                onClose={() => handleProductSelection(null)}
+                onSelect={handleProductSelection}
             />
         </div>
     );

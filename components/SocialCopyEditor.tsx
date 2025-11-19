@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import type { Project, PublishingPackage, PublishingPackageWithVariations, PlatformPublishingContentWithVariations } from '../types';
+import type { Project, PublishingPackageWithVariations, PlatformPublishingContentWithVariations } from '../types';
 import { regenerateFieldCopy } from '../services/geminiService';
 import {
-    SparklesIcon, InstagramIcon, TiktokIcon, YoutubeIcon, XIcon,
-    LeftArrowIcon, RightArrowIcon
+    SparklesIcon, LeftArrowIcon, RightArrowIcon
 } from './icons';
 
 type SocialPlatform = 'instagram' | 'tiktok' | 'youtube' | 'x';
@@ -109,7 +108,7 @@ export const SocialCopyEditor: React.FC<SocialCopyEditorProps> = ({ project }) =
         if (total <= 1) return;
 
         setCopyIndexes(prev => {
-            const currentIndex = prev[platform][field as keyof typeof prev.instagram];
+            const currentIndex = prev[platform][field as keyof typeof prev.instagram] || 0;
             let newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
             if (newIndex >= total) newIndex = 0;
             if (newIndex < 0) newIndex = total - 1;
@@ -148,13 +147,13 @@ export const SocialCopyEditor: React.FC<SocialCopyEditorProps> = ({ project }) =
                         <button
                             onClick={() => handleRegenerateCopy(platform, field)}
                             disabled={isRegenerating}
-                            className="text-sm font-regular text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50 transition-colors"
+                            className="text-sm font-regular text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white disabled:opacity-50 transition-colors"
                         >
                             {isRegenerating ? '...' : 'Regenerate copy'}
                         </button>
                         <button
                             onClick={() => handleCopy(textToCopy, fieldKey)}
-                            className="text-sm font-regular text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                            className="text-sm font-regular text-brand-accent hover:text-brand-accent-hover-subtle transition-colors"
                         >
                             {copiedField === fieldKey ? 'Copied!' : 'Copy text'}
                         </button>
@@ -172,11 +171,11 @@ export const SocialCopyEditor: React.FC<SocialCopyEditorProps> = ({ project }) =
         );
     };
 
-    const tabs: { id: SocialPlatform, name: string, icon: React.ReactNode }[] = [
-        { id: 'instagram', name: 'Instagram', icon: <InstagramIcon className="w-5 h-5" /> },
-        { id: 'tiktok', name: 'TikTok', icon: <TiktokIcon className="w-5 h-5" /> },
-        { id: 'x', name: 'X', icon: <XIcon className="w-4 h-4" /> },
-        { id: 'youtube', name: 'YouTube Shorts', icon: <YoutubeIcon className="w-5 h-5" /> },
+    const tabs: { id: SocialPlatform, name: string }[] = [
+        { id: 'instagram', name: 'Instagram' },
+        { id: 'tiktok', name: 'TikTok' },
+        { id: 'x', name: 'X' },
+        { id: 'youtube', name: 'YouTube Shorts' },
     ];
 
     if (!editablePackage) {
@@ -184,26 +183,23 @@ export const SocialCopyEditor: React.FC<SocialCopyEditorProps> = ({ project }) =
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border h-full">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded-full">
-                    <SparklesIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-lg font-bold">Social Media Copy</h3>
-            </div>
-            <div className="border-b border-gray-200 dark:border-gray-700">
-                <nav className="-mb-px flex whitespace-nowrap overflow-x-auto hide-scrollbar" aria-label="Tabs">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`${activeTab === tab.id ? 'border-blue-500 text-blue-600 dark:text-blue-300' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'} flex items-center gap-2 whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm transition-colors`}
-                        >
-                            {tab.icon} {tab.name}
-                        </button>
-                    ))}
-                </nav>
-            </div>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg h-full">
+            <h3 className="text-lg font-bold">Social Media Copy</h3>
+            <nav className="flex overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700 mt-4">
+                {tabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-shrink-0 flex justify-center items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                            activeTab === tab.id
+                                ? 'border-brand-accent text-gray-900 dark:text-white'
+                                : 'border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400'
+                        }`}
+                    >
+                        {tab.name}
+                    </button>
+                ))}
+            </nav>
             <div className="mt-4 space-y-4 max-h-[calc(100vh-20rem)] overflow-y-auto pr-2">
                 {renderEditableField(activeTab, 'title', 'Title')}
                 {renderEditableField(activeTab, 'caption', 'Caption')}

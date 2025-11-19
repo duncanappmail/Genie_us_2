@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { UploadedFile, PublishingPackage, Project } from '../types';
-import { ShareIcon } from './icons';
+import type { UploadedFile, Project } from '../types';
 import { SocialCopyEditor } from './SocialCopyEditor';
-import { useAuth } from '../context/AuthContext';
 import { generatePublishingPackage } from '../services/geminiService';
+import { ModalWrapper } from './ModalWrapper';
 
 interface PublishingAssistantModalProps {
     isOpen: boolean;
@@ -69,15 +68,13 @@ export const PublishingAssistantModal: React.FC<PublishingAssistantModalProps> =
         }
     }, [isLoading]);
 
-    if (!isOpen) return null;
-
     const renderContent = () => {
         if (isLoading) {
              return (
                 <div className="flex flex-col items-center justify-center h-full pt-8 pb-4">
                     <p className="mb-4 text-gray-600 dark:text-gray-400">Your social media agent is preparing content...</p>
                     <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                        <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.2s ease-in-out' }}></div>
+                        <div className="bg-brand-accent h-2.5 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.2s ease-in-out' }}></div>
                     </div>
                 </div>
             );
@@ -97,25 +94,20 @@ export const PublishingAssistantModal: React.FC<PublishingAssistantModalProps> =
     };
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+        <ModalWrapper isOpen={isOpen} onClose={onClose}>
+            <div className="bg-white dark:bg-black rounded-2xl shadow-xl w-full max-w-2xl flex flex-col">
                 <div className="p-6">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded-full">
-                            <ShareIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Copy For Your Socials</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">I've crafted these words to enchant your audience.</p>
-                        </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Copy For Your Socials</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">I've crafted these words to enchant your audience.</p>
                     </div>
 
-                    <div className="mt-4 max-h-[60vh] min-h-[16rem] overflow-y-auto pr-2">
+                    <div className="mt-4 flex-1">
                         {renderContent()}
                     </div>
                 </div>
-                <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-t dark:border-gray-700 rounded-b-2xl">
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center text-sm text-blue-800 dark:text-blue-200">
+                <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-t dark:border-gray-700 rounded-b-2xl mt-auto">
+                    <div className="p-3 bg-brand-accent/10 dark:bg-brand-accent/20 rounded-lg text-center text-sm text-brand-accent">
                         <strong>How to post:</strong> 1. Copy text fields. 2. Open Socials app. 3. Paste text in the social app.
                     </div>
                     <div className="mt-4 flex flex-col sm:flex-row-reverse gap-3">
@@ -128,6 +120,6 @@ export const PublishingAssistantModal: React.FC<PublishingAssistantModalProps> =
                     </div>
                 </div>
             </div>
-        </div>
+        </ModalWrapper>
     );
 };

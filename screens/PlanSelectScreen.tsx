@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import type { PlanName } from '../types';
-import { PLANS } from '../App';
+import { PLANS } from '../constants';
 import { CheckIcon, LeftArrowIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
@@ -24,17 +25,12 @@ export const PlanSelectScreen: React.FC = () => {
         };
 
         return (
-            <div className={`p-6 border rounded-xl flex flex-col bg-white dark:bg-gray-800/50 relative ${isCurrentPlan ? 'ring-2 ring-blue-500' : ''}`}>
-                {isPro && <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">Recommended</div>}
-                {billingCycle === 'annually' && planName !== 'Free' && (
-                    <div className="absolute top-4 right-4 bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
-                        30% Off
-                    </div>
-                )}
+            <div className={`p-6 border rounded-xl flex flex-col bg-white shadow-sm relative dark:border-gray-700 ${isCurrentPlan ? 'ring-1 ring-brand-accent' : 'border-gray-200'}`}>
+                {isPro && <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-brand-accent text-on-accent text-xs font-bold px-3 py-1 rounded-full">Recommended</div>}
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-2">{plan.name}</h3>
                 <div className="my-4">
                     <span className="text-4xl font-extrabold text-gray-900 dark:text-white">${displayPrice(price)}</span>
-                    <span className="text-sm text-gray-500">{planName !== 'Free' && '/ month'}</span>
+                    <span className="text-sm text-gray-500 dark:text-white ml-2">{planName !== 'Free' && '/ month'}</span>
                 </div>
                 <div className="min-h-[3.5rem]">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -47,7 +43,7 @@ export const PlanSelectScreen: React.FC = () => {
                 <button
                     onClick={() => handleSelectPlan(planName, billingCycle)}
                     disabled={isCurrentPlan}
-                    className={`w-full py-2.5 mt-6 font-semibold rounded-lg transition-colors ${isCurrentPlan ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    className="w-full py-2.5 mt-6 font-semibold rounded-lg transition-colors bg-brand-accent text-on-accent hover:bg-brand-accent-hover disabled:cursor-not-allowed"
                 >
                     {isCurrentPlan ? 'Current Plan' : (planName === 'Free' ? 'Start for Free' : 'Choose Plan')}
                 </button>
@@ -66,22 +62,22 @@ export const PlanSelectScreen: React.FC = () => {
     return (
         <div className="max-w-5xl mx-auto">
              {cameFromSubscriptionPage && (
-                <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 hover:text-blue-600">
+                <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 hover:text-[#3f6212] dark:hover:text-[#91EB23]">
                     <LeftArrowIcon className="w-4 h-4"/> Back
                 </button>
             )}
             <div className="text-center">
-                <h2 className="text-4xl font-bold">Choose Your Plan</h2>
-                <p className="mt-2 text-gray-500 dark:text-gray-400">Start creating for free, or unlock more features with a subscription.</p>
+                <h2 className="text-4xl font-bold text-gray-900 dark:text-white">Choose Your Plan</h2>
+                <p className="mt-2 text-gray-500 dark:text-gray-300">Start creating for free, or unlock more features with a subscription.</p>
 
                 <div className="mt-8 flex justify-center items-center gap-4">
-                    <span className={`font-medium ${billingCycle === 'monthly' ? 'text-blue-600' : ''}`}>Monthly</span>
+                    <span className={`font-medium ${billingCycle === 'monthly' ? 'text-brand-accent' : ''}`}>Monthly</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" checked={billingCycle === 'annually'} onChange={() => setBillingCycle(billingCycle === 'monthly' ? 'annually' : 'monthly')} className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-accent"></div>
                     </label>
-                    <span className={`font-medium ${billingCycle === 'annually' ? 'text-blue-600' : ''}`}>Annually</span>
-                    <span className="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">SAVE 30%</span>
+                    <span className={`font-medium ${billingCycle === 'annually' ? 'text-brand-accent' : ''}`}>Annually</span>
+                    <span className="text-xs bg-[#EDC600] text-black font-semibold px-2.5 py-0.5 rounded-full">SAVE 30%</span>
                 </div>
             </div>
 

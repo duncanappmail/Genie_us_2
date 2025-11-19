@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import type { Project, UploadedFile } from '../types';
 import { Uploader } from './Uploader';
@@ -27,20 +25,9 @@ export const AdvancedVideoSettings: React.FC<AdvancedVideoSettingsProps> = ({ pr
             </button>
             {isOpen && (
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Cinematic Quality */}
-                    <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                        <div>
-                            <label htmlFor="cinematicQuality" className="font-semibold">Cinematic Quality</label>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Higher quality, slower generation.</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="cinematicQuality" checked={project.useCinematicQuality} onChange={e => updateProject({ useCinematicQuality: e.target.checked })} className="sr-only peer" />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                        </label>
-                    </div>
                     {/* Camera Controls */}
                     <div>
-                         <label className="font-semibold block mb-3">Camera Controls</label>
+                         <label className="block mb-3">Camera Controls</label>
                          <div className="flex flex-wrap gap-2">
                             {[
                                 { name: 'Pan Left', icon: <ArrowLongLeftIcon className="w-4 h-4" /> },
@@ -59,22 +46,22 @@ export const AdvancedVideoSettings: React.FC<AdvancedVideoSettingsProps> = ({ pr
                     {/* Storyboarding */}
                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="font-semibold block mb-2">Starting Image</label>
+                            <label className="block mb-2">Starting Image</label>
                             {project.startFrame ? (
-                                <div className="relative w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                                <div className="relative w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg">
                                     <AssetPreview asset={project.startFrame} />
-                                    <button onClick={() => updateProject({ startFrame: undefined })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
+                                    <button onClick={() => updateProject({ startFrame: undefined })} className="absolute -top-2 -right-2 z-10 bg-black text-white dark:bg-white dark:text-black rounded-full p-1 shadow-md">
                                         <XMarkIcon className="w-5 h-5" />
                                     </button>
                                 </div>
                             ) : <Uploader onUpload={(file) => handleFrameUpload(file, 'start')} compact />}
                         </div>
                          <div>
-                            <label className="font-semibold block mb-2">Ending Image</label>
+                            <label className="block mb-2">Ending Image</label>
                              {project.endFrame ? (
-                                <div className="relative w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                                <div className="relative w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg">
                                     <AssetPreview asset={project.endFrame} />
-                                    <button onClick={() => updateProject({ endFrame: undefined })} className="absolute -top-2 -right-2 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md">
+                                    <button onClick={() => updateProject({ endFrame: undefined })} className="absolute -top-2 -right-2 z-10 bg-black text-white dark:bg-white dark:text-black rounded-full p-1 shadow-md">
                                         <XMarkIcon className="w-5 h-5" />
                                     </button>
                                 </div>
@@ -83,7 +70,7 @@ export const AdvancedVideoSettings: React.FC<AdvancedVideoSettingsProps> = ({ pr
                     </div>
                     {/* Negative Prompt */}
                     <div className="md:col-span-2">
-                        <label htmlFor="negativePrompt" className="font-semibold block mb-2">Negative Prompt</label>
+                        <label htmlFor="negativePrompt" className="block mb-2">Negative Prompt</label>
                         <input type="text" id="negativePrompt" value={project.negativePrompt} onChange={e => updateProject({ negativePrompt: e.target.value })} placeholder="e.g., text, watermark, blurry" 
                             className="w-full p-4 border rounded-lg" />
                     </div>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { GoogleGenAI, GenerateContentResponse, Modality } from '@google/genai';
-import { AppStep, CREDIT_COSTS } from '../App';
+import { AppStep } from '../App';
+import { CREDIT_COSTS } from '../constants';
 import type { User, Project, PlanName, CreativeMode, UploadedFile, Template, CampaignPackage, AdCopy, CampaignInspiration, PublishingPackage, CampaignBrief } from '../types';
 import * as dbService from '../services/dbService';
 import * as geminiService from '../services/geminiService';
@@ -200,7 +201,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             generatedVideos: [],
             aspectRatio: '9:16', // Default for UGC
             batchSize: 1,
-            stylePreset: null,
+            // Fix: Removed 'stylePreset' as it does not exist on the Project type.
             useCinematicQuality: false,
             negativePrompt: '',
             referenceFiles: [],
@@ -244,7 +245,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!currentProject || !user || !user.credits) return;
     
         if (type === 'image') {
-            const cost = currentProject.mode === 'Product Ad' ? CREDIT_COSTS.productAd : CREDIT_COSTS.artMaker;
+            // FIX: Access credit costs from the 'base' object.
+            const cost = currentProject.mode === 'Product Ad' ? CREDIT_COSTS.base.productAd : CREDIT_COSTS.base.artMaker;
             if (user.credits.current < cost) {
                 setError("Not enough credits to regenerate.");
                 return;
@@ -337,7 +339,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const handleConfirmExtend = async (prompt: string) => {
          // This is a simplified version of generate.
         if (!currentProject || !user || !user.credits) return;
-        const cost = CREDIT_COSTS.videoExtend;
+        // FIX: Access credit costs from the 'base' object.
+        const cost = CREDIT_COSTS.base.videoExtend;
         if (user.credits.current < cost) {
             setError("Not enough credits to extend video.");
             return;
@@ -391,7 +394,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const runAgent = async () => {
         if (!currentProject || !user || !user.credits || !currentProject.productFile) return;
-        const cost = CREDIT_COSTS.agent;
+        // FIX: Access credit costs from the 'base' object.
+        const cost = CREDIT_COSTS.base.agent;
         if (user.credits.current < cost) {
             setError("Not enough credits to run the agent.");
             return;
@@ -514,12 +518,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const memoizedHandleGenerate = useCallback(async () => {
         if (!currentProject || !user || !user.credits) return;
 
+        // FIX: Access credit costs from the 'base' object and correct UGC video cost logic.
         const cost = {
-            'Product Ad': CREDIT_COSTS.productAd * currentProject.batchSize,
-            'Art Maker': CREDIT_COSTS.artMaker * currentProject.batchSize,
-            'Video Maker': currentProject.useCinematicQuality ? CREDIT_COSTS.videoCinematic : CREDIT_COSTS.videoFast,
-            'Create a UGC Video': CREDIT_COSTS.ugcVideo,
-            'AI Agent': CREDIT_COSTS.agent,
+            'Product Ad': CREDIT_COSTS.base.productAd * currentProject.batchSize,
+            'Art Maker': CREDIT_COSTS.base.artMaker * currentProject.batchSize,
+            'Video Maker': currentProject.useCinematicQuality ? CREDIT_COSTS.base.videoCinematic : CREDIT_COSTS.base.videoFast,
+            'Create a UGC Video': currentProject.videoModel === 'veo-3.1-generate-preview' ? CREDIT_COSTS.base.ugcVideoCinematic : CREDIT_COSTS.base.ugcVideoFast,
+            'AI Agent': CREDIT_COSTS.base.agent,
         }[currentProject.mode];
 
         if (user.credits.current < cost) {

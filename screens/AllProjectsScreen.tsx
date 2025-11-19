@@ -40,7 +40,7 @@ export const AllProjectsScreen: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto">
-            <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 hover:text-blue-600">
+            <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold mb-6 text-brand-accent hover:underline">
                 <LeftArrowIcon className="w-4 h-4"/> Back to Dashboard
             </button>
 
@@ -50,30 +50,30 @@ export const AllProjectsScreen: React.FC = () => {
                     <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
                         <button
                             onClick={() => setActiveFilter('All')}
-                            className={`px-4 sm:px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                            className={`flex-1 justify-center px-4 sm:px-6 py-3 text-sm font-semibold rounded-md transition-colors hover:text-gray-900 dark:hover:text-white ${
                                 activeFilter === 'All'
-                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm'
-                                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
+                                    ? 'bg-white text-gray-900 dark:bg-gray-900 dark:text-white shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400'
                             }`}
                         >
                             All
                         </button>
                         <button
                             onClick={() => setActiveFilter('Images')}
-                            className={`flex items-center gap-2 px-4 sm:px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                            className={`flex-1 justify-center items-center gap-2 px-4 sm:px-6 py-3 text-sm font-semibold rounded-md transition-colors hover:text-gray-900 dark:hover:text-white ${
                                 activeFilter === 'Images'
-                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm'
-                                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
+                                    ? 'bg-white text-gray-900 dark:bg-gray-900 dark:text-white shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400'
                             }`}
                         >
                             <ImageIcon className="w-5 h-5" /> Images
                         </button>
                         <button
                             onClick={() => setActiveFilter('Videos')}
-                            className={`flex items-center gap-2 px-4 sm:px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                            className={`flex-1 justify-center items-center gap-2 px-4 sm:px-6 py-3 text-sm font-semibold rounded-md transition-colors hover:text-gray-900 dark:hover:text-white ${
                                 activeFilter === 'Videos'
-                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-white shadow-sm'
-                                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700/60'
+                                    ? 'bg-white text-gray-900 dark:bg-gray-900 dark:text-white shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400'
                             }`}
                         >
                             <VideoIcon className="w-5 h-5" /> Videos
@@ -86,7 +86,7 @@ export const AllProjectsScreen: React.FC = () => {
                             placeholder="Search projects..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 ring-brand-accent"
                         />
                     </div>
                 </div>
