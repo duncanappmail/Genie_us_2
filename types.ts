@@ -1,4 +1,5 @@
 
+
 import type { Modality } from "@google/genai";
 
 export interface UploadedFile {
@@ -47,7 +48,7 @@ export interface Project {
     templateId?: string;
     adStyle?: AdStyle;
     // For UGC Factory
-    ugcType?: 'talking_head' | 'product_showcase';
+    ugcType?: 'talking_head' | 'product_showcase' | 'green_screen' | 'podcast' | 'reaction' | 'pov' | 'unboxing';
     ugcScript?: string;
     ugcAvatarFile?: UploadedFile | null;
     ugcProductFile?: UploadedFile | null;

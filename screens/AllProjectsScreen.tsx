@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { Project, UploadedFile } from '../types';
 import { AssetPreview } from '../components/AssetPreview';
@@ -44,51 +45,54 @@ export const AllProjectsScreen: React.FC = () => {
                 <LeftArrowIcon className="w-4 h-4"/> Back to Dashboard
             </button>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-                <h2 className="text-3xl font-bold text-center sm:text-left">Your Projects</h2>
-                 <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <div className="flex flex-col gap-6 mb-8">
+                <div className="flex justify-between items-center">
+                     <h2 className="text-3xl font-bold text-left">Your Projects</h2>
+                </div>
+                
+                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => setActiveFilter('All')}
-                            className={`flex-1 justify-center px-4 sm:px-6 py-3 text-sm font-semibold rounded-md transition-colors hover:text-gray-900 dark:hover:text-white ${
+                            className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
                                 activeFilter === 'All'
-                                    ? 'bg-white text-gray-900 dark:bg-gray-900 dark:text-white shadow-sm'
-                                    : 'text-gray-500 dark:text-gray-400'
+                                    ? 'bg-brand-accent text-on-accent'
+                                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                         >
                             All
                         </button>
                         <button
                             onClick={() => setActiveFilter('Images')}
-                            className={`flex-1 justify-center items-center gap-2 px-4 sm:px-6 py-3 text-sm font-semibold rounded-md transition-colors hover:text-gray-900 dark:hover:text-white ${
+                            className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
                                 activeFilter === 'Images'
-                                    ? 'bg-white text-gray-900 dark:bg-gray-900 dark:text-white shadow-sm'
-                                    : 'text-gray-500 dark:text-gray-400'
+                                    ? 'bg-brand-accent text-on-accent'
+                                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                         >
-                            <ImageIcon className="w-5 h-5" /> Images
+                            Images
                         </button>
                         <button
                             onClick={() => setActiveFilter('Videos')}
-                            className={`flex-1 justify-center items-center gap-2 px-4 sm:px-6 py-3 text-sm font-semibold rounded-md transition-colors hover:text-gray-900 dark:hover:text-white ${
+                            className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
                                 activeFilter === 'Videos'
-                                    ? 'bg-white text-gray-900 dark:bg-gray-900 dark:text-white shadow-sm'
-                                    : 'text-gray-500 dark:text-gray-400'
+                                    ? 'bg-brand-accent text-on-accent'
+                                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                         >
-                            <VideoIcon className="w-5 h-5" /> Videos
+                            Videos
                         </button>
                     </div>
-                    <div className="relative flex-grow sm:flex-grow-0">
-                        <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"/>
-                        <input 
-                            type="text"
-                            placeholder="Search projects..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 ring-brand-accent"
-                        />
-                    </div>
+                    <div className="relative w-full sm:w-64">
+                         <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                         <input 
+                             type="text"
+                             placeholder="Search projects..."
+                             value={searchQuery}
+                             onChange={e => setSearchQuery(e.target.value)}
+                             className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 ring-brand-accent input-focus-brand bg-transparent"
+                         />
+                     </div>
                 </div>
             </div>
             {projects.length === 0 ? (

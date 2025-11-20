@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useProjects } from '../context/ProjectContext';
 import { useUI } from '../context/UIContext';
@@ -123,12 +124,12 @@ export const ExploreScreen: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8">
+            <div className="text-left mb-8">
                 <h2 className="text-4xl font-bold text-gray-900 dark:text-white">Explore Templates</h2>
             </div>
 
             <div className="mb-8 space-y-6">
-                <div className="flex justify-center">
+                <div className="flex justify-start">
                     <div className="flex items-center gap-2">
                         {pillCategories.map((category) => (
                             <button
@@ -150,7 +151,7 @@ export const ExploreScreen: React.FC = () => {
                 </div>
                 
                 {activePill === 'Product Placement' && (
-                    <div className="flex justify-center overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-start overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700">
                         {categories.map(category => (
                             <button
                                 key={category}
@@ -177,7 +178,7 @@ export const ExploreScreen: React.FC = () => {
                             className="group text-left"
                         >
                             <div
-                                className="relative overflow-hidden rounded-xl aspect-square cursor-pointer"
+                                className={`relative overflow-hidden rounded-xl cursor-pointer ${activePill === 'UGC' ? 'aspect-[9/16]' : 'aspect-square'}`}
                                 onMouseEnter={(e) => e.currentTarget.parentElement?.setAttribute('data-hovering', 'true')}
                                 onMouseLeave={(e) => e.currentTarget.parentElement?.removeAttribute('data-hovering')}
                             >

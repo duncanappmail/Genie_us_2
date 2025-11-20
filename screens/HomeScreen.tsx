@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { CreativeMode, Project, Template, UploadedFile } from '../types';
 import { AssetPreview } from '../components/AssetPreview';
@@ -251,28 +252,40 @@ export const HomeScreen: React.FC = () => {
 
             {/* Featured Templates */}
             <div className="mb-16">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
-                    <h2 className="text-3xl font-bold text-left shrink-0">Use Template</h2>
-                    <div className="flex items-center gap-2 sm:gap-4 w-full md:w-auto">
-                        <div className="flex items-center gap-2">
-                            {pillCategories.map((category) => (
-                                <button
-                                    key={category}
-                                    onClick={() => setActivePill(category)}
-                                    className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
-                                        activePill === category
-                                            ? 'bg-brand-accent text-on-accent'
-                                            : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                    }`}
-                                >
-                                    {category}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="flex-grow md:flex-grow-0"></div>
+                <div className="flex flex-col mb-8 gap-6">
+                    <div className="flex justify-between items-center">
+                         <h2 className="text-3xl font-bold text-left shrink-0">Use Template</h2>
+                         {/* Mobile only Explore button to keep existing flow */}
                         <button 
                             onClick={() => navigateTo('EXPLORE')}
-                            className="px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors text-sm shrink-0"
+                            className="md:hidden px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors text-sm shrink-0"
+                        >
+                            Explore all
+                        </button>
+                    </div>
+                    {/* Align Tabs to Left, Explore Button to right on Desktop */}
+                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                        <div className="flex justify-start">
+                            <div className="flex items-center gap-2">
+                                {pillCategories.map((category) => (
+                                    <button
+                                        key={category}
+                                        onClick={() => setActivePill(category)}
+                                        className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
+                                            activePill === category
+                                                ? 'bg-brand-accent text-on-accent'
+                                                : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                        }`}
+                                    >
+                                        {category}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        {/* Desktop only Explore button */}
+                        <button 
+                            onClick={() => navigateTo('EXPLORE')}
+                            className="hidden md:block px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors text-sm shrink-0"
                         >
                             Explore all
                         </button>
@@ -288,7 +301,7 @@ export const HomeScreen: React.FC = () => {
                                 className="group text-left"
                             >
                                 <div
-                                    className="relative overflow-hidden rounded-xl aspect-square cursor-pointer"
+                                    className={`relative overflow-hidden rounded-xl cursor-pointer ${activePill === 'UGC' ? 'aspect-[9/16]' : 'aspect-square'}`}
                                     onMouseEnter={(e) => e.currentTarget.parentElement?.setAttribute('data-hovering', 'true')}
                                     onMouseLeave={(e) => e.currentTarget.parentElement?.removeAttribute('data-hovering')}
                                 >

@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type, VideoGenerationReferenceImage, VideoGenerationReferenceType, GenerateContentResponse, Modality } from "@google/genai";
 import type { UploadedFile, CampaignBrief, CampaignInspiration, AdCopy, ScrapedProductDetails, PublishingPackage, PlatformPublishingContent, Project, BrandProfile, UGCScriptIdea, SocialProofIdea } from '../types';
 
@@ -652,6 +653,27 @@ export const generateUGCVideo = async (project: Project): Promise<UploadedFile> 
         audioDescription += ` Their delivery should be clear and natural.`;
     }
     prompt += ` ${audioDescription}`;
+    
+    // --- INJECT STYLE INSTRUCTIONS BASED ON TYPE ---
+    let styleInstruction = "";
+    switch (project.ugcType) {
+        case 'green_screen':
+            styleInstruction = "Visual Style: The speaker is superimposed over a background image representing the scene description (Green Screen effect). Camera is fixed, focused on the speaker.";
+            break;
+        case 'podcast':
+            styleInstruction = "Visual Style: Professional podcast setup. The speaker is speaking into a large microphone, potentially wearing headphones. Darker, moody studio lighting.";
+            break;
+        case 'reaction':
+            styleInstruction = "Visual Style: Reaction video style. The speaker is reacting to something. Split screen or picture-in-picture composition if appropriate for the scene.";
+            break;
+        case 'pov':
+            styleInstruction = "Visual Style: POV / Vlog style. Handheld camera movement (shaky cam), wide angle selfie lens. Authentic and casual.";
+            break;
+        case 'unboxing':
+             styleInstruction = "Visual Style: Unboxing video. The person is excited, holding the product up close to the camera, showing details.";
+             break;
+    }
+    prompt += ` ${styleInstruction}`;
 
     prompt += ` The video should feel authentic and engaging.`;
 
@@ -733,8 +755,12 @@ export const validateAvatarImage = async (image: UploadedFile): Promise<boolean>
     }
 };
 
-export const generateScriptFromTemplate = async (sceneDescription: string, productInfo?: { productName: string, productDescription: string }): Promise<string> => {
+export const generateScriptFromTemplate = async (sceneDescription: string, ugcType?: string, productInfo?: { productName: string, productDescription: string }): Promise<string> => {
     let prompt = `You are an expert UGC scriptwriter. Generate a short, engaging, and natural script for a video content creator.\n\nScene: ${sceneDescription}\n`;
+    
+    if (ugcType) {
+        prompt += `Video Style: ${ugcType.replace(/_/g, ' ')}\n`;
+    }
     
     if (productInfo?.productName) {
         prompt += `Product: ${productInfo.productName}\nDescription: ${productInfo.productDescription}\n\nThe script should authentically recommend and showcase this product in the given scene. Keep it under 45 seconds spoken.`;

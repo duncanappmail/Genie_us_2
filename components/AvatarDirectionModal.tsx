@@ -155,9 +155,18 @@ export const AvatarDirectionModal: React.FC<AvatarDirectionModalProps> = ({
               >
                   <div className="aspect-square w-full">
                     {avatarFile && activeDirection === 'upload' ? (
-                        <div className="relative w-full h-full rounded-lg overflow-hidden mt-2">
-                            <AssetPreview asset={avatarFile} objectFit="cover" />
-                            <button onClick={handleRemoveFile} className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"><XMarkIcon className="w-4 h-4" /></button>
+                        <div className="relative w-full h-full rounded-lg mt-2 group">
+                            {/* Image Container */}
+                            <div className="relative w-full h-full rounded-lg overflow-hidden">
+                                <AssetPreview asset={avatarFile} objectFit="cover" />
+                            </div>
+                            {/* Remove Button (Outside clipped area) */}
+                            <button 
+                                onClick={handleRemoveFile} 
+                                className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 bg-black text-white rounded-full shadow-md hover:bg-gray-800 transition-colors"
+                            >
+                                <XMarkIcon className="w-3.5 h-3.5" />
+                            </button>
                         </div>
                     ) : (
                         <div className="w-full h-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex flex-col items-center justify-center text-center p-4">
@@ -187,9 +196,18 @@ export const AvatarDirectionModal: React.FC<AvatarDirectionModalProps> = ({
               >
                   <div className="aspect-square w-full">
                     {avatarFile && activeDirection === 'template' ? (
-                        <div className="relative w-full h-full rounded-lg overflow-hidden mt-2">
-                            <AssetPreview asset={avatarFile} objectFit="cover" />
-                            <button onClick={handleRemoveFile} className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"><XMarkIcon className="w-4 h-4" /></button>
+                        <div className="relative w-full h-full rounded-lg mt-2 group">
+                            {/* Image Container */}
+                            <div className="relative w-full h-full rounded-lg overflow-hidden">
+                                <AssetPreview asset={avatarFile} objectFit="cover" />
+                            </div>
+                            {/* Remove Button (Outside clipped area) */}
+                            <button 
+                                onClick={handleRemoveFile} 
+                                className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 bg-black text-white rounded-full shadow-md hover:bg-gray-800 transition-colors"
+                            >
+                                <XMarkIcon className="w-3.5 h-3.5" />
+                            </button>
                         </div>
                     ) : (
                         <div className="w-full h-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex flex-col items-center justify-center">

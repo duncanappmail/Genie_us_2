@@ -58,7 +58,7 @@ const BatchSizeSelector: React.FC<{ value: number; onChange: (newValue: number) 
     return (
         <div>
             <label className={`block mb-2 ${disabled ? 'text-gray-400 dark:text-gray-600' : ''}`}>Batch Size</label>
-            <div className={`flex items-center justify-between p-2 border rounded-lg h-[58px] ${disabled ? 'bg-transparent border-gray-200 dark:border-[#2B2B2B]' : 'bg-white dark:bg-[#171717] border-gray-300 dark:border-gray-600'}`}>
+            <div className={`flex items-center justify-between p-2 border rounded-lg h-12 ${disabled ? 'bg-transparent border-gray-200 dark:border-[#2B2B2B]' : 'bg-white dark:bg-[#171717] border-gray-300 dark:border-gray-600'}`}>
                 <button onClick={decrement} disabled={disabled || value <= 1} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent disabled:text-gray-400 dark:disabled:text-gray-600" aria-label="Decrease batch size">
                     <MinusIcon className="w-5 h-5" />
                 </button>
@@ -438,7 +438,7 @@ export const GeneratorScreen: React.FC = () => {
                                     )}
                                      {project.mode !== 'Product Ad' && (
                                         <div className="relative group">
-                                            <button onClick={() => setIsPromptModalOpen(true)} className="text-brand-accent hover:underline disabled:hover:no-underline text-sm disabled:text-gray-400 disabled:no-underline" disabled={isProductAdAndMissingFile}>
+                                            <button onClick={() => setIsPromptModalOpen(true)} className="text-brand-accent hover:underline disabled:hover:no-underline text-sm disabled:text-gray-400 disabled:no-underline">
                                                 {project.mode === 'Video Maker' ? 'Video inspiration' : 'Visual inspiration'}
                                             </button>
                                             <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -475,7 +475,7 @@ export const GeneratorScreen: React.FC = () => {
                             )}
                             
                             <div className="col-span-2 lg:col-span-1">
-                                <button onClick={onGenerate} disabled={isGenerateDisabled} className="w-full h-[58px] px-6 py-4 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors flex items-center justify-center gap-2 text-base">
+                                <button onClick={onGenerate} disabled={isGenerateDisabled} className="w-full h-12 px-6 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors flex items-center justify-center gap-2 text-base">
                                     {isLoading ? (
                                         <><div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div><span>Generating...</span></>
                                     ) : (
@@ -564,7 +564,7 @@ export const GeneratorScreen: React.FC = () => {
                                 )}
                             </button>
                         ) : (
-                            <button onClick={() => setProductAdStep(2)} disabled={isProductAdAndMissingFile} className="px-8 py-3 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors">
+                            <button onClick={() => setProductAdStep(2)} disabled={isProductAdAndMissingFile} className="px-8 h-12 flex items-center bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover transition-colors">
                                 Continue
                             </button>
                         )}

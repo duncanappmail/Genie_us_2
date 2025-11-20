@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { CheckIcon, ChevronDownIcon } from './icons';
 
@@ -55,7 +56,7 @@ export const GenericSelect: React.FC<GenericSelectProps> = ({ label, options, se
             <button 
                 onClick={() => setIsOpen(!isOpen)} 
                 disabled={disabled} 
-                className="generic-select-button w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg flex justify-between items-center text-left bg-white dark:bg-[#1C1E20] input-focus-brand"
+                className="generic-select-button w-full h-12 px-4 border border-gray-300 dark:border-gray-600 rounded-lg flex justify-between items-center text-left bg-white dark:!bg-[#131517] input-focus-brand"
             >
                 <div className="flex items-center gap-2 overflow-hidden">
                     {selectedOption?.icon}

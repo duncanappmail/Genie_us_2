@@ -67,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({ isInitialPlanSelection }) => {
 
 
     return (
-        <header className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-slate-50">
+        <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-4 sm:px-6 md:px-8 border-b border-gray-200 dark:border-gray-700 bg-slate-50">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white cursor-pointer" onClick={onHome}>GenieUs</h1>
             {!isInitialPlanSelection && (
                 <>

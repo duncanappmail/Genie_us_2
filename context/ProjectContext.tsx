@@ -149,8 +149,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     ugcSceneDescription: templateToApply.sceneDescription,
                     ugcAction: templateToApply.ugcAction,
                     templateId: templateToApply.id,
-                    // Default to Talking Head initially, user can change
-                    ugcType: 'talking_head',
+                    // Removed default 'ugcType' assignment so user must select
                     mode: 'Create a UGC Video'
                 });
             } else if (project.campaignBrief) {
