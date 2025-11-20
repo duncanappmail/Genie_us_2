@@ -211,14 +211,17 @@ export const UGCGeneratorScreen: React.FC = () => {
         : CREDIT_COSTS.base.ugcVideoFast;
 
     // --- Template Mode Navigation ---
-    const getTemplateStepIndex = (step: TemplateStep) => ['Setup', 'Story', 'Avatar', 'Production'].indexOf(step);
+    const skipsAvatarStep = project.ugcAvatarSource !== 'upload' && project.ugcAvatarSource !== 'ai';
+    const templateSteps = skipsAvatarStep 
+        ? ['Setup', 'Story', 'Production'] 
+        : ['Setup', 'Story', 'Avatar', 'Production'];
+
+    const getTemplateStepIndex = (step: TemplateStep) => templateSteps.indexOf(step);
     
     const handleTemplateNext = () => {
          if (templateStep === 'Setup') setTemplateStep('Story');
          else if (templateStep === 'Story') {
-             if (project.ugcAvatarSource !== 'upload' && project.ugcAvatarSource !== 'ai' && project.ugcAvatarSource !== 'template') {
-                  setTemplateStep('Production');
-             } else if (project.ugcAvatarSource === 'template') { 
+             if (skipsAvatarStep) {
                   setTemplateStep('Production');
              } else {
                   setTemplateStep('Avatar');
@@ -229,7 +232,7 @@ export const UGCGeneratorScreen: React.FC = () => {
 
     const handleTemplateBack = () => {
         if (templateStep === 'Production') {
-            if (project.ugcAvatarSource === 'template' || (!project.ugcAvatarSource)) setTemplateStep('Story');
+            if (skipsAvatarStep) setTemplateStep('Story');
             else setTemplateStep('Avatar');
         }
         else if (templateStep === 'Avatar') setTemplateStep('Story');
@@ -238,11 +241,11 @@ export const UGCGeneratorScreen: React.FC = () => {
 
     const getTemplateHeaderTitle = () => {
         switch (templateStep) {
-            case 'Setup': return currentTemplate?.title || 'Create Video';
-            case 'Story': return "Let's Craft Your Script";
-            case 'Avatar': return "Customize Your Avatar";
+            case 'Setup': return currentTemplate ? `${currentTemplate.title} Template` : 'Create Video';
+            case 'Story': return "Craft the Script";
+            case 'Avatar': return "Customize Avatar";
             case 'Production': return "Video Settings";
-            default: return currentTemplate?.title || 'Create Video';
+            default: return currentTemplate ? `${currentTemplate.title} Template` : 'Create Video';
         }
     };
 
@@ -287,8 +290,6 @@ export const UGCGeneratorScreen: React.FC = () => {
     // --- Render Logic ---
 
     if (isTemplateMode) {
-        const steps = ['Setup', 'Story', 'Avatar', 'Production'];
-        
         return (
             <div className="max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
@@ -302,7 +303,7 @@ export const UGCGeneratorScreen: React.FC = () => {
                             {getTemplateHeaderTitle()}
                         </h2>
                     </div>
-                    <ProgressStepper steps={steps} currentStepIndex={getTemplateStepIndex(templateStep)} />
+                    <ProgressStepper steps={templateSteps} currentStepIndex={getTemplateStepIndex(templateStep)} />
                 </div>
 
                 <div className="max-w-4xl mx-auto">
@@ -496,7 +497,7 @@ const TemplateSetupStep: React.FC<{
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
                     />
                 </div>
-                <div className="mt-3 text-center w-full">
+                <div className="mt-3 text-left w-full">
                     <h3 className={`text-base font-bold transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-800 dark:text-gray-100'} group-hover:text-brand-accent`}>
                         {title}
                     </h3>
@@ -599,9 +600,9 @@ const TemplateSetupStep: React.FC<{
                 </div>
             )}
 
-            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 mx-auto w-full max-w-md">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 mx-auto w-full max-w-[30rem]">
                 <div>
-                    <span className="font-bold block text-gray-900 dark:text-gray-200">Use Template Character?</span>
+                    <span className="font-bold block text-gray-900 dark:text-gray-200">Use Avatar in the Template?</span>
                     <span className="text-sm text-gray-500 dark:text-gray-400">Uncheck to customize the avatar</span>
                 </div>
                  <label className="relative inline-flex items-center cursor-pointer">
@@ -691,9 +692,9 @@ const TemplateStoryStep: React.FC<{ project: Project; updateProject: (u: Partial
 
              {/* Voice Settings */}
              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <GenericSelect label="Emotion" options={['Auto', 'Happy', 'Excited', 'Serious', 'Calm'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcEmotion || 'Auto'} onSelect={(v) => updateProject({ ugcEmotion: v as string })} />
                 <GenericSelect label="Language" options={['English', 'Spanish', 'French', 'German', 'Japanese'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcLanguage || 'English'} onSelect={(v) => updateProject({ ugcLanguage: v as string })} />
                 <GenericSelect label="Accent" options={['American', 'British', 'Australian'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcAccent || 'American'} onSelect={(v) => updateProject({ ugcAccent: v as string })} />
+                <GenericSelect label="Emotion" options={['Auto', 'Happy', 'Excited', 'Serious', 'Calm'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcEmotion || 'Auto'} onSelect={(v) => updateProject({ ugcEmotion: v as string })} />
             </div>
 
             {/* Edit Action Modal */}
@@ -780,17 +781,20 @@ const TemplateAvatarStep: React.FC<{
                 <div>
                     {project.ugcAvatarFile ? (
                         <div className="relative w-full h-64 group">
-                             {/* Image Container */}
-                            <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                                <AssetPreview asset={project.ugcAvatarFile} objectFit="contain" />
+                             {/* Wrapper Pattern for Remove Button Positioning */}
+                             <div className="relative w-full h-full">
+                                {/* Image Container (Clipped) */}
+                                <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                                    <AssetPreview asset={project.ugcAvatarFile} objectFit="contain" />
+                                </div>
+                                {/* Remove Button (Outside clipped area) */}
+                                <button 
+                                    onClick={() => updateProject({ ugcAvatarFile: null })} 
+                                    className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 bg-black text-white rounded-full shadow-md hover:bg-gray-800 transition-colors"
+                                >
+                                    <XMarkIcon className="w-3.5 h-3.5" />
+                                </button>
                             </div>
-                            {/* Remove Button (Outside clipped area) */}
-                            <button 
-                                onClick={() => updateProject({ ugcAvatarFile: null })} 
-                                className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 bg-black text-white rounded-full shadow-md hover:bg-gray-800 transition-colors"
-                            >
-                                <XMarkIcon className="w-3.5 h-3.5" />
-                            </button>
                         </div>
                     ) : (
                         <>
@@ -872,7 +876,7 @@ const CustomSetupStep: React.FC<{
                         />
                     )}
                 </div>
-                <div className="mt-3 w-full">
+                <div className="mt-3 w-full text-left">
                     <h3 className={`text-base font-bold transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-800 dark:text-gray-100'} group-hover:text-brand-accent`}>
                         {title}
                     </h3>
@@ -888,7 +892,7 @@ const CustomSetupStep: React.FC<{
         <div className="space-y-8 max-w-5xl mx-auto animate-in fade-in slide-in-from-top-2 duration-300">
             {/* Main Selection Carousel */}
             <div>
-                <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Choose a Video Style</h2>
+                <h2 className="text-xl font-bold mb-6 text-left text-gray-900 dark:text-white">Choose a Video Style</h2>
                 
                 <div 
                     ref={scrollRef}
@@ -921,14 +925,15 @@ const CustomSetupStep: React.FC<{
 
             {isProductCentric && (
                 <div>
-                    <h4 className="font-bold mb-6 text-xl text-gray-900 dark:text-white text-left">Product Details</h4>
-                    
                     <div className="max-w-5xl">
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                             {/* Left Column: Upload Card */}
                             <div className="w-full">
                                 <div className="p-6 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 w-full">
                                      <div className="space-y-4">
+                                         <div className="flex justify-between items-center mb-2">
+                                             <h4 className="font-bold text-xl text-gray-900 dark:text-white text-left">Product Details</h4>
+                                         </div>
                                          <ProductScraper
                                             onProductScraped={handleUGCProductScraped}
                                             setIsLoading={setIsLoading}
@@ -1103,9 +1108,9 @@ const CustomStoryStep: React.FC<{ project: Project; updateProject: (u: Partial<P
 
              {/* Voice Settings */}
              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <GenericSelect label="Emotion" options={['Auto', 'Happy', 'Excited', 'Serious', 'Calm'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcEmotion || 'Auto'} onSelect={(v) => updateProject({ ugcEmotion: v as string })} />
                 <GenericSelect label="Language" options={['English', 'Spanish', 'French', 'German', 'Japanese'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcLanguage || 'English'} onSelect={(v) => updateProject({ ugcLanguage: v as string })} />
                 <GenericSelect label="Accent" options={['American', 'British', 'Australian'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcAccent || 'American'} onSelect={(v) => updateProject({ ugcAccent: v as string })} />
+                <GenericSelect label="Emotion" options={['Auto', 'Happy', 'Excited', 'Serious', 'Calm'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcEmotion || 'Auto'} onSelect={(v) => updateProject({ ugcEmotion: v as string })} />
             </div>
         </div>
     );
