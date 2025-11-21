@@ -1,5 +1,3 @@
-
-
 import type { Modality } from "@google/genai";
 
 export interface UploadedFile {
@@ -49,6 +47,7 @@ export interface Project {
     adStyle?: AdStyle;
     // For UGC Factory
     ugcType?: 'talking_head' | 'product_showcase' | 'green_screen' | 'podcast' | 'reaction' | 'pov' | 'unboxing';
+    ugcTopic?: string;
     ugcScript?: string;
     ugcAvatarFile?: UploadedFile | null;
     ugcProductFile?: UploadedFile | null;
@@ -75,6 +74,7 @@ export interface BrandProfile {
     websiteUrl: string;
     businessName: string;
     logoFile: UploadedFile | null;
+    logoUrl?: string;
     fonts: {
         header: string;
         subHeader: string;
@@ -122,6 +122,7 @@ export interface Template {
     animationPrompt?: string;
     sceneDescription?: string;
     ugcAction?: string;
+    defaultAvatarDescription?: string;
 }
 
 export interface CampaignBrief {
@@ -148,6 +149,8 @@ export interface CampaignInspiration {
 export interface UGCScriptIdea {
     hook: string;
     script: string;
+    scene: string;
+    action: string;
 }
 
 export interface SocialProofIdea {
@@ -195,4 +198,34 @@ export interface PublishingPackageWithVariations {
     tiktok: PlatformPublishingContentWithVariations;
     youtube: PlatformPublishingContentWithVariations;
     x?: PlatformPublishingContentWithVariations;
+}
+
+// --- Chat & Agent Types ---
+export type ChatRole = 'user' | 'model' | 'system';
+
+export interface ChatMessage {
+    id: string;
+    role: ChatRole;
+    text: string;
+    timestamp: number;
+    // For Rich UI rendering in the chat
+    attachments?: UploadedFile[]; 
+    uiType?: 'text' | 'idea-cards' | 'project-preview';
+    uiData?: any; // Flexible payload for component rendering
+}
+export interface CalendarEvent {
+    id: string;
+    userId: string;
+    date: number; // Timestamp
+    title: string;
+    description?: string;
+    status: 'draft' | 'generated' | 'scheduled' | 'posted';
+    projectId?: string; // Linked project if generated
+    // Blueprint for generation
+    concept?: {
+        mode: CreativeMode;
+        prompt: string;
+        templateId?: string;
+        adStyle?: AdStyle;
+    };
 }

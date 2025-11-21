@@ -9,8 +9,9 @@ import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { useProjects } from '../context/ProjectContext';
 import { AvatarTemplateModal } from '../components/AvatarTemplateModal';
+import { ScriptGeneratorModal } from '../components/ScriptGeneratorModal';
 import { ProductScraper } from '../components/ProductScraper';
-import { generateCampaignBrief, fetchWithProxies, generateScriptFromTemplate, suggestAvatarFromContext, validateAvatarImage } from '../services/geminiService';
+import { generateCampaignBrief, fetchWithProxies, suggestAvatarFromContext, validateAvatarImage } from '../services/geminiService';
 import { TEMPLATE_LIBRARY } from '../lib/templates';
 import { ProgressStepper } from '../components/ProgressStepper';
 import { ModalWrapper } from '../components/ModalWrapper';
@@ -80,13 +81,13 @@ const VIDEO_MODELS = [
 ];
 
 const UGC_STYLES = [
-    { type: 'talking_head', title: 'Just Talking', description: 'Classic talking head.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2011.04.52%E2%80%AFAM.png' },
-    { type: 'product_showcase', title: 'Product Showcase', description: 'Highlighting a product.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2011.01.23%E2%80%AFAM.png' },
-    { type: 'unboxing', title: 'Unboxing', description: 'Opening and revealing.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.47.47%E2%80%AFAM.png' },
-    { type: 'green_screen', title: 'Green Screen', description: 'Commentary over background.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.52.17%E2%80%AFAM.png' },
-    { type: 'podcast', title: 'Podcast Clip', description: 'Professional studio vibe.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.34.57%E2%80%AFAM.png' },
-    { type: 'reaction', title: 'Reaction', description: 'Reacting to content.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.48.56%E2%80%AFAM.png' },
-    { type: 'pov', title: 'POV / Vlog', description: 'Handheld, selfie style.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.47.47%E2%80%AFAM.png' },
+    { type: 'talking_head', title: 'Just Talking', description: 'Classic talking head.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2011.04.52%E2%80%AFAM.png', comingSoon: false },
+    { type: 'product_showcase', title: 'Product Showcase', description: 'Highlighting a product.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2011.01.23%E2%80%AFAM.png', comingSoon: false },
+    { type: 'unboxing', title: 'Unboxing', description: 'Opening and revealing.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.47.47%E2%80%AFAM.png', comingSoon: false },
+    { type: 'pov', title: 'POV / Vlog', description: 'Handheld, selfie style.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.47.47%E2%80%AFAM.png', comingSoon: false },
+    { type: 'green_screen', title: 'Green Screen', description: 'Commentary over background.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.52.17%E2%80%AFAM.png', comingSoon: true },
+    { type: 'podcast', title: 'Podcast Clip', description: 'Professional studio vibe.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.34.57%E2%80%AFAM.png', comingSoon: true },
+    { type: 'reaction', title: 'Reaction', description: 'Reacting to content.', imageUrl: 'https://storage.googleapis.com/genius-images-ny/images/Screenshot%202025-11-08%20at%2010.48.56%E2%80%AFAM.png', comingSoon: true },
 ];
 
 // Basic file util
@@ -626,68 +627,61 @@ const TemplateSetupStep: React.FC<{
 };
 
 const TemplateStoryStep: React.FC<{ project: Project; updateProject: (u: Partial<Project>) => void; isLoading: boolean; }> = ({ project, updateProject, isLoading }) => {
-    const [isGeneratingScript, setIsGeneratingScript] = useState(false);
-    const [isActionModalOpen, setIsActionModalOpen] = useState(false);
-    const [actionText, setActionText] = useState(project.ugcAction || '');
-
-    const handleMagicScript = async () => {
-        setIsGeneratingScript(true);
-        try {
-            const productInfo = project.productName ? { productName: project.productName, productDescription: project.productDescription } : undefined;
-            // Pass ugcType for context-aware generation
-            const script = await generateScriptFromTemplate(project.ugcSceneDescription || "A generic scene", project.ugcType, productInfo);
-            updateProject({ ugcScript: script });
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setIsGeneratingScript(false);
-        }
-    };
-
-    const saveAction = () => {
-        updateProject({ ugcAction: actionText });
-        setIsActionModalOpen(false);
-    };
+    const { user } = useAuth();
+    const [isScriptModalOpen, setIsScriptModalOpen] = useState(false);
     
-    // Simplified quick select for template mode (since templates usually dictate scene)
-    const templateQuickScenes = QUICK_SCENES['talking_head'];
+    const hasProduct = !!project.ugcProductFile || (!!project.productName && !!project.productDescription);
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
-             {/* Action Section (Read Only + Edit Modal) */}
-            <div>
-                <div className="flex items-center gap-3 mb-2">
-                    <label className="font-bold text-lg text-gray-900 dark:text-white">What Your Avatar is Doing</label>
-                    <button onClick={() => { setActionText(project.ugcAction || ''); setIsActionModalOpen(true); }} className="text-brand-accent hover:text-brand-accent-hover transition-colors" title="Edit">
-                        <PencilIcon className="w-4 h-4" />
-                    </button>
+             {/* Top Section: Topic & Generate Button */}
+             <div>
+                <div className="mb-2">
+                    <label className="font-bold text-lg mb-2 block text-gray-900 dark:text-white">Topic / Key Message</label>
+                        <input 
+                        type="text" 
+                        value={project.ugcTopic || ''} 
+                        onChange={(e) => updateProject({ ugcTopic: e.target.value })}
+                        placeholder="e.g. Top tips for staying productive, My morning routine..." 
+                        className="w-full p-4 border rounded-lg input-focus-brand"
+                    />
                 </div>
-                <div className="w-full p-4 border rounded-lg h-24 bg-gray-50 dark:!bg-[#131517] text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 overflow-y-auto text-sm">
-                     {project.ugcAction}
+                 <div className="flex justify-end">
+                     <button 
+                        onClick={() => setIsScriptModalOpen(true)} 
+                        disabled={isLoading || (!hasProduct && !project.ugcTopic)}
+                        className="text-brand-accent hover:underline disabled:hover:no-underline text-sm disabled:text-gray-400 disabled:no-underline flex items-center gap-1 font-semibold"
+                        title={!hasProduct && !project.ugcTopic ? "Please enter a topic or product first" : ""}
+                    >
+                        <SparklesIcon className="w-4 h-4" />
+                        Generate Script & Action
+                    </button>
                 </div>
             </div>
 
              {/* Dialogue Section */}
-            <div className="relative">
+            <div>
                 <label className="font-bold text-lg mb-2 block text-gray-900 dark:text-white">Dialogue / Script</label>
-                <div className="relative border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:!bg-[#131517] input-focus-brand hover:border-gray-400 dark:hover:border-gray-500 transition-colors group-focus-within:ring-2 group-focus-within:ring-brand-focus group-focus-within:border-brand-focus">
+                <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:!bg-[#131517] input-focus-brand hover:border-gray-400 dark:hover:border-gray-500 transition-colors group-focus-within:ring-2 group-focus-within:ring-brand-focus group-focus-within:border-brand-focus">
                     <textarea
-                        value={project.ugcScript}
+                        value={project.ugcScript || ''}
                         onChange={(e) => updateProject({ ugcScript: e.target.value })}
                         placeholder="Enter what the avatar should say..."
                         className="w-full border-none focus:outline-none focus:ring-0 bg-transparent dark:!bg-transparent h-40 text-gray-900 dark:text-white resize-none p-0"
                     />
-                    <div className="flex items-center justify-end mt-2">
-                         <button 
-                            onClick={handleMagicScript} 
-                            disabled={isGeneratingScript || isLoading}
-                            className="text-brand-accent hover:underline disabled:hover:no-underline text-sm disabled:text-gray-400 disabled:no-underline flex items-center gap-1 font-semibold"
-                        >
-                            {isGeneratingScript && <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>}
-                            Write for me
-                        </button>
-                    </div>
                 </div>
+            </div>
+
+             {/* Action Section - Editable Textarea */}
+            <div>
+                <label className="font-bold text-lg mb-1 block text-gray-900 dark:text-white">Action</label>
+                <p className="text-sm text-gray-500 mb-2">What should the avatar be doing?</p>
+                <textarea
+                    value={project.ugcAction || ''}
+                    onChange={(e) => updateProject({ ugcAction: e.target.value })}
+                    placeholder="e.g., Smiling at the camera, pointing to the side..."
+                    className="w-full p-4 border rounded-lg h-24 input-focus-brand bg-white dark:bg-[#131517] dark:border-gray-700"
+                />
             </div>
 
              {/* Voice Settings */}
@@ -697,21 +691,14 @@ const TemplateStoryStep: React.FC<{ project: Project; updateProject: (u: Partial
                 <GenericSelect label="Emotion" options={['Auto', 'Happy', 'Excited', 'Serious', 'Calm'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcEmotion || 'Auto'} onSelect={(v) => updateProject({ ugcEmotion: v as string })} />
             </div>
 
-            {/* Edit Action Modal */}
-            <ModalWrapper isOpen={isActionModalOpen} onClose={() => setIsActionModalOpen(false)}>
-                <div className="bg-white dark:bg-black rounded-2xl shadow-xl w-full max-w-lg p-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Edit Avatar Action</h3>
-                    <textarea
-                        value={actionText}
-                        onChange={(e) => setActionText(e.target.value)}
-                        className="w-full p-4 border rounded-lg h-40 input-focus-brand bg-gray-50 dark:!bg-[#131517] text-gray-900 dark:text-white dark:border-gray-700"
-                    />
-                    <div className="mt-6 flex justify-end gap-3">
-                        <button onClick={() => setIsActionModalOpen(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">Cancel</button>
-                        <button onClick={saveAction} className="px-4 py-2 bg-brand-accent text-on-accent font-bold rounded-lg hover:bg-brand-accent-hover">Save</button>
-                    </div>
-                </div>
-            </ModalWrapper>
+            <ScriptGeneratorModal 
+                isOpen={isScriptModalOpen}
+                onClose={() => setIsScriptModalOpen(false)}
+                // Ignore scene for templates as it's fixed
+                onSelect={(script, _, action) => updateProject({ ugcScript: script, ugcAction: action })}
+                project={project}
+                brandProfile={user?.brandProfile}
+            />
         </div>
     );
 };
@@ -799,9 +786,6 @@ const TemplateAvatarStep: React.FC<{
                     ) : (
                         <>
                             <Uploader onUpload={handleAvatarUpload} title="Upload Avatar Image" subtitle="" />
-                            <div className="mt-2 text-center">
-                                <button className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Pick from library</button>
-                            </div>
                         </>
                     )}
                     
@@ -860,24 +844,35 @@ const CustomSetupStep: React.FC<{
         }
     };
 
-    const SelectionCard = ({ type, title, description, imageUrl }: { type: Project['ugcType'], title: string, description: string, imageUrl?: string }) => {
+    const SelectionCard = ({ type, title, description, imageUrl, comingSoon }: { type: Project['ugcType'], title: string, description: string, imageUrl?: string, comingSoon?: boolean }) => {
          const isSelected = project.ugcType === type;
          return (
              <button 
-                onClick={() => updateProject({ ugcType: type })}
-                className="group text-left flex flex-col flex-shrink-0 w-48 snap-start"
+                onClick={() => !comingSoon && updateProject({ ugcType: type })}
+                disabled={comingSoon}
+                className={`group text-left flex flex-col flex-shrink-0 w-48 snap-start ${comingSoon ? 'cursor-not-allowed opacity-60' : ''}`}
             >
-                <div className={`relative overflow-hidden rounded-xl aspect-[9/16] w-full bg-gray-100 dark:bg-gray-800 border-2 transition-all duration-300 ${isSelected ? 'border-brand-accent ring-1 ring-brand-accent' : 'border-gray-200 dark:border-gray-700 group-hover:border-gray-300 dark:group-hover:border-gray-600'}`}>
+                <div className={`relative overflow-hidden rounded-xl aspect-[9/16] w-full bg-gray-100 dark:bg-gray-800 border-2 transition-all duration-300 
+                    ${isSelected ? 'border-brand-accent ring-1 ring-brand-accent' : 'border-gray-200 dark:border-gray-700'} 
+                    ${!comingSoon ? 'group-hover:border-brand-accent group-hover:ring-1 group-hover:ring-brand-accent' : ''}
+                `}>
                     {imageUrl && (
                         <img 
                             src={imageUrl} 
                             alt={title} 
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                            className={`w-full h-full object-cover transition-transform duration-300 ${!comingSoon ? 'group-hover:scale-105' : ''}`} 
                         />
+                    )}
+                    {comingSoon && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <span className="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/30">
+                                Coming Soon
+                            </span>
+                        </div>
                     )}
                 </div>
                 <div className="mt-3 w-full text-left">
-                    <h3 className={`text-base font-bold transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-800 dark:text-gray-100'} group-hover:text-brand-accent`}>
+                    <h3 className={`text-base font-bold transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-800 dark:text-gray-100'} ${!comingSoon ? 'group-hover:text-brand-accent' : ''}`}>
                         {title}
                     </h3>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
@@ -906,6 +901,7 @@ const CustomSetupStep: React.FC<{
                             title={style.title}
                             description={style.description}
                             imageUrl={style.imageUrl}
+                            comingSoon={style.comingSoon}
                         />
                     ))}
                 </div>
@@ -926,7 +922,7 @@ const CustomSetupStep: React.FC<{
             {isProductCentric && (
                 <div>
                     <div className="max-w-5xl">
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Left Column: Upload Card */}
                             <div className="w-full">
                                 <div className="p-6 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 w-full">
@@ -974,7 +970,7 @@ const CustomSetupStep: React.FC<{
                             
                              {/* Right Column: Inputs */}
                             {shouldShowDetails && (
-                                <div className="flex flex-col gap-6 w-full">
+                                <div className="flex flex-col gap-6 w-full h-full">
                                     <div>
                                         <label htmlFor="productName" className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Product Name</label>
                                         {isAnalyzing ? (
@@ -984,13 +980,13 @@ const CustomSetupStep: React.FC<{
                                             className="w-full p-4 border rounded-lg input-focus-brand" />
                                         )}
                                     </div>
-                                    <div>
+                                    <div className="flex-grow flex flex-col">
                                         <label htmlFor="productDescription" className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Product Description</label>
                                         {isAnalyzing ? (
-                                            <div className="w-full p-4 h-24 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                                            <div className="w-full p-4 h-full min-h-[8rem] rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
                                         ) : (
                                             <textarea id="productDescription" value={project.productDescription || ''} onChange={e => updateProject({ productDescription: e.target.value })} placeholder="e.g., A warm and comfortable slipper..."
-                                                className="w-full p-4 border rounded-lg input-focus-brand min-h-[8rem]"></textarea>
+                                                className="w-full p-4 border rounded-lg input-focus-brand h-full resize-none"></textarea>
                                         )}
                                     </div>
                                 </div>
@@ -1004,21 +1000,8 @@ const CustomSetupStep: React.FC<{
 };
 
 const CustomStoryStep: React.FC<{ project: Project; updateProject: (u: Partial<Project>) => void; isLoading: boolean; }> = ({ project, updateProject, isLoading }) => {
-    const [isGeneratingScript, setIsGeneratingScript] = useState(false);
-
-    const handleMagicScript = async () => {
-        setIsGeneratingScript(true);
-        try {
-            const productInfo = project.productName ? { productName: project.productName, productDescription: project.productDescription } : undefined;
-            // Pass ugcType for better context
-            const script = await generateScriptFromTemplate(project.ugcSceneDescription || "A generic scene", project.ugcType, productInfo);
-            updateProject({ ugcScript: script });
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setIsGeneratingScript(false);
-        }
-    };
+    const { user } = useAuth();
+    const [isScriptModalOpen, setIsScriptModalOpen] = useState(false);
 
     const getSceneLabel = () => {
         switch(project.ugcType) {
@@ -1040,9 +1023,51 @@ const CustomStoryStep: React.FC<{ project: Project; updateProject: (u: Partial<P
 
     // Get relevant quick scenes for the current type
     const currentQuickScenes = QUICK_SCENES[project.ugcType || 'talking_head'] || DEFAULT_SCENES;
-
+    
+    // Determine if we have product context
+    const hasProduct = !!project.ugcProductFile || (!!project.productName && !!project.productDescription);
+    
     return (
         <div className="space-y-8 max-w-4xl mx-auto animate-in fade-in slide-in-from-top-2 duration-300">
+             {/* Dialogue */}
+            <div className="relative">
+                {/* Topic Input - Always visible to provide context for script generation */}
+                <div className="mb-2">
+                    <label className="font-bold text-lg mb-2 block text-gray-900 dark:text-white">Topic / Key Message</label>
+                        <input 
+                        type="text" 
+                        value={project.ugcTopic || ''} 
+                        onChange={(e) => updateProject({ ugcTopic: e.target.value })}
+                        placeholder="e.g. Top tips for staying productive, My morning routine..." 
+                        className="w-full p-4 border rounded-lg input-focus-brand"
+                    />
+                </div>
+                
+                 <div className="flex justify-end mb-6">
+                    <button 
+                        onClick={() => setIsScriptModalOpen(true)} 
+                        disabled={isLoading || (!hasProduct && !project.ugcTopic)}
+                        className="text-brand-accent hover:underline disabled:hover:no-underline text-sm disabled:text-gray-400 disabled:no-underline flex items-center gap-1 font-semibold"
+                        title={!hasProduct && !project.ugcTopic ? "Please enter a topic or product first" : ""}
+                    >
+                        <SparklesIcon className="w-4 h-4" />
+                        Generate Script, Scene & Action
+                    </button>
+                </div>
+            
+                <label className="font-bold text-lg mb-2 block text-gray-900 dark:text-white">Dialogue / Script</label>
+                <div className="relative border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:!bg-[#131517] input-focus-brand hover:border-gray-400 dark:hover:border-gray-500 transition-colors group-focus-within:ring-2 group-focus-within:ring-brand-focus group-focus-within:border-brand-focus">
+                    <textarea
+                        value={project.ugcScript || ''}
+                        onChange={(e) => updateProject({ ugcScript: e.target.value })}
+                        placeholder="Enter what the avatar should say..."
+                        className="w-full border-none focus:outline-none focus:ring-0 bg-transparent dark:!bg-transparent h-40 text-gray-900 dark:text-white resize-none p-0"
+                    />
+                </div>
+            </div>
+
+            <hr className="border-gray-200 dark:border-gray-700" />
+
             {/* Scene Description */}
             <div>
                 <h3 className="text-xl font-bold mb-1 text-gray-900 dark:text-white">{getSceneLabel()}</h3>
@@ -1069,31 +1094,6 @@ const CustomStoryStep: React.FC<{ project: Project; updateProject: (u: Partial<P
                 </div>
             </div>
 
-            <hr className="border-gray-200 dark:border-gray-700" />
-
-            {/* Dialogue */}
-            <div className="relative">
-                <label className="font-bold text-lg mb-2 block text-gray-900 dark:text-white">Dialogue / Script</label>
-                <div className="relative border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:!bg-[#131517] input-focus-brand hover:border-gray-400 dark:hover:border-gray-500 transition-colors group-focus-within:ring-2 group-focus-within:ring-brand-focus group-focus-within:border-brand-focus">
-                    <textarea
-                        value={project.ugcScript || ''}
-                        onChange={(e) => updateProject({ ugcScript: e.target.value })}
-                        placeholder="Enter what the avatar should say..."
-                        className="w-full border-none focus:outline-none focus:ring-0 bg-transparent dark:!bg-transparent h-40 text-gray-900 dark:text-white resize-none p-0"
-                    />
-                    <div className="flex items-center justify-end mt-2">
-                         <button 
-                            onClick={handleMagicScript} 
-                            disabled={isGeneratingScript || isLoading}
-                            className="text-brand-accent hover:underline disabled:hover:no-underline text-sm disabled:text-gray-400 disabled:no-underline flex items-center gap-1 font-semibold"
-                        >
-                            {isGeneratingScript && <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>}
-                            Write for me
-                        </button>
-                    </div>
-                </div>
-            </div>
-
              {/* Action */}
              <div>
                 <h3 className="text-xl font-bold mb-1 text-gray-900 dark:text-white">Action</h3>
@@ -1112,6 +1112,14 @@ const CustomStoryStep: React.FC<{ project: Project; updateProject: (u: Partial<P
                 <GenericSelect label="Accent" options={['American', 'British', 'Australian'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcAccent || 'American'} onSelect={(v) => updateProject({ ugcAccent: v as string })} />
                 <GenericSelect label="Emotion" options={['Auto', 'Happy', 'Excited', 'Serious', 'Calm'].map(v => ({ value: v, label: v }))} selectedValue={project.ugcEmotion || 'Auto'} onSelect={(v) => updateProject({ ugcEmotion: v as string })} />
             </div>
+
+            <ScriptGeneratorModal 
+                isOpen={isScriptModalOpen}
+                onClose={() => setIsScriptModalOpen(false)}
+                onSelect={(script, scene, action) => updateProject({ ugcScript: script, ugcSceneDescription: scene, ugcAction: action })}
+                project={project}
+                brandProfile={user?.brandProfile}
+            />
         </div>
     );
 };

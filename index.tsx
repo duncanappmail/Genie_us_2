@@ -4,6 +4,7 @@ import App from './App';
 import { UIProvider } from './context/UIContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProjectProvider } from './context/ProjectContext';
+import { GenieChatProvider } from './context/GenieChatContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -16,7 +17,9 @@ root.render(
     <UIProvider>
       <AuthProvider>
         <ProjectProvider>
-          <App />
+            <GenieChatProvider>
+                <App />
+            </GenieChatProvider>
         </ProjectProvider>
       </AuthProvider>
     </UIProvider>

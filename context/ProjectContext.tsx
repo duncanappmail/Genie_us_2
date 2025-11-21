@@ -113,7 +113,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             referenceFiles: [],
             publishingPackage: null,
             ugcScript: '',
-            ugcAction: '',
+            ugcAction: '', // Action starts empty
             ugcVoice: 'Auto',
             ugcEmotion: 'Auto',
             ugcLanguage: 'English',
@@ -147,9 +147,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 setCurrentProject({
                     ...project,
                     ugcSceneDescription: templateToApply.sceneDescription,
-                    ugcAction: templateToApply.ugcAction,
+                    ugcAvatarDescription: templateToApply.defaultAvatarDescription || project.ugcAvatarDescription, // Use template specific avatar if available
                     templateId: templateToApply.id,
-                    // Removed default 'ugcType' assignment so user must select
                     mode: 'Create a UGC Video'
                 });
             } else if (project.campaignBrief) {

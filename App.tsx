@@ -25,6 +25,7 @@ import { DeleteConfirmationModal } from './components/DeleteConfirmationModal';
 import { ExtendVideoModal } from './components/ExtendVideoModal';
 import { CancelSubscriptionModal } from './components/CancelSubscriptionModal';
 import { ProductSelectionModal } from './components/ProductSelectionModal';
+import { GenieChat, GenieFab } from './components/GenieChat';
 
 // Define AppStep type
 export type AppStep = 'AUTH' | 'PLAN_SELECT' | 'HOME' | 'ALL_PROJECTS' | 'GENERATE' | 'UGC_GENERATE' | 'PREVIEW' | 'SUBSCRIPTION' | 'BILLING_HISTORY' | 'PAYMENT_DETAILS' | 'EXPLORE' | 'AGENT' | 'AGENT_RESULT' | 'BRANDING' | 'AGENT_SETUP_PRODUCT';
@@ -102,12 +103,14 @@ const App: React.FC = () => {
     const isInitialPlanSelection = user && !user.subscription;
 
     return (
-        <div className="min-h-screen font-sans text-gray-800 dark:text-white">
+        <div className="min-h-screen font-sans text-gray-800 dark:text-white relative">
             {isLoading && <LoadingOverlay />}
             {user && appStep !== 'AUTH' && <Header isInitialPlanSelection={isInitialPlanSelection} />}
             <main key={appStep} className="p-4 sm:p-6 md:p-8 page-enter">
                 {renderScreen()}
             </main>
+            
+            {/* Global Modals */}
             <DeleteConfirmationModal 
                 isOpen={!!projectToDelete}
                 onClose={() => setProjectToDelete(null)}
@@ -134,6 +137,14 @@ const App: React.FC = () => {
                 onClose={() => handleProductSelection(null)}
                 onSelect={handleProductSelection}
             />
+            
+            {/* Genie Co-pilot */}
+            {user && appStep !== 'AUTH' && (
+                <>
+                    <GenieFab />
+                    <GenieChat />
+                </>
+            )}
         </div>
     );
 };

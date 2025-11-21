@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
@@ -210,29 +211,29 @@ export const BrandingScreen: React.FC = () => {
              </div>
              <div className="space-y-8">
                 {/* Business Information Card */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border">
-                    <h3 className="text-xl font-bold mb-4">Business Information</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-[#2B2B2B]">
+                    <h3 className="text-xl font-bold mb-4">Business</h3>
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="businessName" className="block mb-1 text-sm">Business Name</label>
-                            <input type="text" id="businessName" value={localProfile.businessName} onChange={e => handleFieldChange('businessName', e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Your Business Name"/>
+                            <label htmlFor="businessName" className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                            <input type="text" id="businessName" value={localProfile.businessName} onChange={e => handleFieldChange('businessName', e.target.value)} className="w-full p-4 border rounded-lg input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600" placeholder="Your Business Name"/>
                         </div>
                          <div>
-                            <label htmlFor="businessOverview" className="block mb-1 text-sm">Business Overview</label>
-                            <textarea id="businessOverview" value={localProfile.businessOverview} onChange={e => handleFieldChange('businessOverview', e.target.value)} className="w-full p-2 border rounded h-32 input-focus-brand" placeholder="What your business does, sells, its industry, values, and mission."/>
+                            <label htmlFor="businessOverview" className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Overview</label>
+                            <textarea id="businessOverview" value={localProfile.businessOverview} onChange={e => handleFieldChange('businessOverview', e.target.value)} className="w-full p-4 border rounded-lg h-32 input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600 resize-none" placeholder="What your business does, sells, its industry, values, and mission."/>
                         </div>
                     </div>
                 </div>
 
                 {/* Visual Identity Card */}
-                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border">
+                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-[#2B2B2B]">
                     <h3 className="text-xl font-bold mb-4">Visual Identity</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <h4 className="mb-2">Logo</h4>
+                            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Logo</h4>
                              {localProfile.logoFile ? (
-                                <div className="relative w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                                    <AssetPreview asset={localProfile.logoFile} />
+                                <div className="relative w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                                    <AssetPreview asset={localProfile.logoFile} objectFit="contain" />
                                     <button onClick={handleLogoRemove} className="absolute -top-2 -right-2 z-10 bg-black text-white dark:bg-white dark:text-black rounded-full p-1 shadow-md">
                                         <XMarkIcon className="w-5 h-5" />
                                     </button>
@@ -242,13 +243,13 @@ export const BrandingScreen: React.FC = () => {
                             )}
                         </div>
                          <div>
-                            <h4 className="mb-2">Color Palette</h4>
+                            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Color Palette</h4>
                             <div className="space-y-2">
                                 {localProfile.colors.map((color, index) => (
-                                    <div key={index} className="flex items-center gap-2">
+                                    <div key={index} className="flex items-center gap-4">
                                         <div className="relative w-8 h-8 shrink-0">
                                             <div 
-                                                className="w-full h-full rounded-full border border-gray-200 dark:border-gray-700"
+                                                className="w-full h-full rounded-full border border-gray-200 dark:border-gray-600"
                                                 style={{ backgroundColor: color.hex }}
                                                 aria-hidden="true"
                                             />
@@ -260,91 +261,103 @@ export const BrandingScreen: React.FC = () => {
                                                 title={`Change ${color.label} color`}
                                             />
                                         </div>
-                                        <input type="text" value={color.label} onChange={e => handleColorChange(index, 'label', e.target.value)} className="w-full p-4 border rounded text-sm input-focus-brand" placeholder="Color Label"/>
-                                        <input type="text" value={color.hex} onChange={e => handleColorChange(index, 'hex', e.target.value)} className="w-24 p-4 border rounded text-sm input-focus-brand"/>
+                                        <input type="text" value={color.label} onChange={e => handleColorChange(index, 'label', e.target.value)} className="w-full p-3 border rounded-lg text-sm input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600" placeholder="Color Label"/>
+                                        <input type="text" value={color.hex} onChange={e => handleColorChange(index, 'hex', e.target.value)} className="w-24 p-3 border rounded-lg text-sm input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600"/>
                                          <button onClick={() => removeFromArray('colors', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                                     </div>
                                 ))}
-                                <button onClick={() => addToArray('colors')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('colors')} className="ml-12 text-sm font-semibold text-brand-accent flex items-center gap-1 hover:underline"><PlusCircleIcon className="w-5 h-5"/> Add Color</button>
                             </div>
                         </div>
                     </div>
                     <div className="mt-6">
-                        <h4 className="mb-2">Fonts</h4>
+                        <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Fonts</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                              <div>
-                                <label className="block mb-1 text-sm text-gray-500 dark:text-gray-400">Header</label>
-                                <input type="text" value={localProfile.fonts.header} onChange={e => handleFontChange('header', e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Header Font"/>
+                                <label className="block mb-1 text-xs text-gray-500 dark:text-gray-400">Header</label>
+                                <input type="text" value={localProfile.fonts.header} onChange={e => handleFontChange('header', e.target.value)} className="w-full p-3 border rounded-lg input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600" placeholder="Header Font"/>
                             </div>
                              <div>
-                                <label className="block mb-1 text-sm text-gray-500 dark:text-gray-400">Sub-Header</label>
-                                <input type="text" value={localProfile.fonts.subHeader} onChange={e => handleFontChange('subHeader', e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Sub-Header Font"/>
+                                <label className="block mb-1 text-xs text-gray-500 dark:text-gray-400">Sub-Header</label>
+                                <input type="text" value={localProfile.fonts.subHeader} onChange={e => handleFontChange('subHeader', e.target.value)} className="w-full p-3 border rounded-lg input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600" placeholder="Sub-Header Font"/>
                             </div>
                              <div>
-                                <label className="block mb-1 text-sm text-gray-500 dark:text-gray-400">Body</label>
-                                <input type="text" value={localProfile.fonts.body} onChange={e => handleFontChange('body', e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Body Font"/>
+                                <label className="block mb-1 text-xs text-gray-500 dark:text-gray-400">Body</label>
+                                <input type="text" value={localProfile.fonts.body} onChange={e => handleFontChange('body', e.target.value)} className="w-full p-3 border rounded-lg input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600" placeholder="Body Font"/>
                             </div>
                         </div>
                     </div>
                  </div>
                  
                 {/* Mission Card */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-[#2B2B2B]">
                     <h3 className="text-xl font-bold mb-4">Mission</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <h4 className="mb-2">Mission Statements</h4>
+                            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Mission Statements</h4>
                             <div className="space-y-2">
                                 {localProfile.missionStatements.map((statement, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        <input type="text" value={statement} onChange={e => handleArrayChange('missionStatements', index, e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="Inspiring mission statement..."/>
-                                        <button onClick={() => removeFromArray('missionStatements', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
+                                    <div key={index} className="flex items-start gap-2">
+                                        <textarea 
+                                            value={statement} 
+                                            onChange={e => handleArrayChange('missionStatements', index, e.target.value)} 
+                                            className="w-full p-3 border rounded-lg input-focus-brand resize-none bg-white dark:bg-[#1C1E20] dark:border-gray-600" 
+                                            placeholder="Inspiring mission statement..."
+                                            rows={2}
+                                        />
+                                        <button onClick={() => removeFromArray('missionStatements', index)} className="p-1 text-gray-400 hover:text-red-500 mt-2"><TrashIcon className="w-4 h-4"/></button>
                                     </div>
                                 ))}
-                                <button onClick={() => addToArray('missionStatements')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('missionStatements')} className="text-sm font-semibold text-brand-accent flex items-center gap-1 hover:underline"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                         <div>
-                            <h4 className="mb-2">Brand Values</h4>
+                            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Brand Values</h4>
                             <div className="space-y-2">
                                 {localProfile.brandValues.map((val, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                    <input type="text" value={val} onChange={e => handleArrayChange('brandValues', index, e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="A core brand value..."/>
-                                    <button onClick={() => removeFromArray('brandValues', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
+                                <div key={index} className="flex items-start gap-2">
+                                    <textarea 
+                                        value={val} 
+                                        onChange={e => handleArrayChange('brandValues', index, e.target.value)} 
+                                        className="w-full p-3 border rounded-lg input-focus-brand resize-none bg-white dark:bg-[#1C1E20] dark:border-gray-600" 
+                                        placeholder="A core brand value..."
+                                        rows={2}
+                                    />
+                                    <button onClick={() => removeFromArray('brandValues', index)} className="p-1 text-gray-400 hover:text-red-500 mt-2"><TrashIcon className="w-4 h-4"/></button>
                                 </div>
                                 ))}
-                                <button onClick={() => addToArray('brandValues')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('brandValues')} className="text-sm font-semibold text-brand-accent flex items-center gap-1 hover:underline"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Brand Personality Card */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-[#2B2B2B]">
                      <h3 className="text-xl font-bold mb-4">Brand Personality</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <h4 className="mb-2">Brand Tone of Voice</h4>
+                            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Brand Tone of Voice</h4>
                             <div className="space-y-2">
                                 {localProfile.toneOfVoice.map((tone, index) => (
                                 <div key={index} className="flex items-center gap-2">
-                                    <input type="text" value={tone} onChange={e => handleArrayChange('toneOfVoice', index, e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="e.g., Playful and Witty"/>
+                                    <input type="text" value={tone} onChange={e => handleArrayChange('toneOfVoice', index, e.target.value)} className="w-full p-4 border rounded-lg input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600" placeholder="e.g., Playful and Witty"/>
                                     <button onClick={() => removeFromArray('toneOfVoice', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                                 </div>
                                 ))}
-                                <button onClick={() => addToArray('toneOfVoice')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('toneOfVoice')} className="text-sm font-semibold text-brand-accent flex items-center gap-1 hover:underline"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                          <div>
-                            <h4 className="mb-2">Brand Aesthetics</h4>
+                            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Brand Aesthetics</h4>
                             <div className="space-y-2">
                                 {localProfile.brandAesthetics.map((aesthetic, index) => (
                                 <div key={index} className="flex items-center gap-2">
-                                    <input type="text" value={aesthetic} onChange={e => handleArrayChange('brandAesthetics', index, e.target.value)} className="w-full p-4 border rounded input-focus-brand" placeholder="e.g., Minimal and Clean"/>
+                                    <input type="text" value={aesthetic} onChange={e => handleArrayChange('brandAesthetics', index, e.target.value)} className="w-full p-4 border rounded-lg input-focus-brand bg-white dark:bg-[#1C1E20] dark:border-gray-600" placeholder="e.g., Minimal and Clean"/>
                                     <button onClick={() => removeFromArray('brandAesthetics', index)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                                 </div>
                                 ))}
-                                <button onClick={() => addToArray('brandAesthetics')} className="text-sm font-semibold text-brand-accent flex items-center gap-1"><PlusCircleIcon className="w-5 h-5"/> Add</button>
+                                <button onClick={() => addToArray('brandAesthetics')} className="text-sm font-semibold text-brand-accent flex items-center gap-1 hover:underline"><PlusCircleIcon className="w-5 h-5"/> Add</button>
                             </div>
                         </div>
                      </div>

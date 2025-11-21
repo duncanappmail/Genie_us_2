@@ -169,6 +169,17 @@
         .dark input::placeholder, .dark textarea::placeholder {
             color: #525252;
         }
+
+        /* Autofill Overrides for Dark Mode */
+        .dark input:-webkit-autofill,
+        .dark input:-webkit-autofill:hover, 
+        .dark input:-webkit-autofill:focus, 
+        .dark input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #171717 inset !important;
+            -webkit-text-fill-color: #d1d5db !important;
+            caret-color: #d1d5db !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
         
         /* Inputs and Select Buttons inside containers */
         .dark .bg-white input,
@@ -246,7 +257,8 @@
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "react-markdown": "https://aistudiocdn.com/react-markdown@^10.1.0"
   }
 }
 </script>
